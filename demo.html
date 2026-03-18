@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NIOSH RAP — AI-Assisted Application Management Platform</title>
+
+<!-- React 18 + ReactDOM -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- Recharts (UMD) -->
+<script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<!-- Babel standalone for JSX -->
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+/* ===== CSS Variables & Reset ===== */
+:root {
+  --primary: #1e40af;
+  --primary-light: #3b82f6;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; }
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+h1, h2, h3, h4 { color: var(--text); margin: 0 0 0.5rem; }
+h1 { font-size: 1.5rem; font-weight: 700; }
+h2 { font-size: 1.25rem; font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+h4 { font-size: 0.95rem; font-weight: 600; }
+p { margin: 0; }
+code { font-family: "SF Mono", "Consolas", "Liberation Mono", monospace; font-size: 0.85em; background: var(--border-light); padding: 0.15em 0.4em; border-radius: 3px; }
+
+/* ===== App Shell ===== */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app-header { background: var(--surface); border-bottom: 2px solid var(--primary); padding: 0 1.5rem; display: flex; align-items: center; gap: 2rem; height: 60px; position: sticky; top: 0; z-index: 100; }
+.app-brand { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.app-logo { background: var(--primary); color: white; font-weight: 800; font-size: 0.9rem; padding: 0.3rem 0.6rem; border-radius: 4px; letter-spacing: 1px; }
+.app-title { display: flex; flex-direction: column; }
+.title-main { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.title-sub { font-size: 0.75rem; color: var(--text-muted); }
+.app-nav { display: flex; gap: 0.25rem; margin-left: auto; }
+.nav-btn { background: none; border: none; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; height: 60px; }
+.nav-btn:hover { color: var(--primary); background: rgba(30, 64, 175, 0.04); }
+.nav-btn.nav-active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.nav-number { background: var(--border); color: var(--text-muted); width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+.nav-active .nav-number { background: var(--primary); color: white; }
+.app-user { flex-shrink: 0; font-size: 0.8rem; color: var(--text-muted); background: var(--border-light); padding: 0.25rem 0.75rem; border-radius: 12px; }
+.app-main { flex: 1; padding: 1.5rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+.app-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
+
+/* ===== Module Header ===== */
+.module-header { margin-bottom: 1.5rem; }
+.module-header h1 { margin-bottom: 0.25rem; }
+.module-header p { color: var(--text-muted); }
+
+/* ===== Cards ===== */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+
+/* ===== Badges ===== */
+.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.badge-pass { background: rgba(22, 163, 74, 0.1); color: var(--success); }
+.badge-fail { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+.badge-warning { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+.badge-na { background: var(--border-light); color: var(--text-muted); }
+
+/* ===== KPIs ===== */
+.kpi-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; flex: 1; min-width: 120px; text-align: center; }
+.kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+/* ===== Data Tables ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th, .data-table td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+.data-table th { background: var(--border-light); font-weight: 600; color: var(--text); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.data-table tr:hover { background: rgba(59, 130, 246, 0.03); }
+.row-fail { background: rgba(220, 38, 38, 0.03) !important; }
+
+/* ===== Buttons ===== */
+.btn { padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); transition: all 0.15s; }
+.btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-primary:hover { background: #1e3a8a; }
+.btn-secondary { background: var(--surface); color: var(--text); }
+.btn-secondary:hover { background: var(--border-light); }
+
+/* ===== Info Box ===== */
+.info-box { background: rgba(59, 130, 246, 0.05); border: 1px solid var(--primary-light); border-radius: 6px; padding: 0.75rem 1rem; font-size: 0.85rem; }
+
+/* ===== Steps (Module 1) ===== */
+.steps { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.step { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; }
+.step-active { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+.step-complete { border-color: var(--success); color: var(--success); }
+.step-number { width: 22px; height: 22px; border-radius: 50%; background: var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+.step-active .step-number { background: var(--primary); color: white; }
+.step-complete .step-number { background: var(--success); color: white; }
+
+/* ===== Upload Zone ===== */
+.upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-zone:hover, .upload-zone.dragging { border-color: var(--primary); background: rgba(30, 64, 175, 0.03); }
+
+/* ===== Progress Bar ===== */
+.progress-bar { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s ease; }
+
+/* ===== Guidance Cards (Module 1) ===== */
+.guidance-card { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
+.guidance-header { padding: 0.75rem 1rem; background: var(--border-light); display: flex; align-items: center; }
+.guidance-body { padding: 1rem; }
+.guidance-body p { margin-bottom: 0.75rem; line-height: 1.6; }
+.guidance-refs { background: var(--border-light); padding: 0.75rem; border-radius: 4px; font-size: 0.85rem; }
+.guidance-refs ul { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+.guidance-refs li { margin-bottom: 0.25rem; }
+
+/* ===== Tabs ===== */
+.tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; color: var(--text-muted); transition: all 0.2s; }
+.tab:hover { color: var(--primary); }
+.tab-active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* ===== Kanban Board (Module 2) ===== */
+.kanban-board { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem; }
+.kanban-column { min-width: 180px; flex: 1; background: var(--border-light); border-radius: 8px; padding: 0.5rem; }
+.kanban-column-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.5rem 0.75rem; font-weight: 600; font-size: 0.8rem; color: var(--text); }
+.kanban-count { background: var(--border); color: var(--text-muted); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+.kanban-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.15s; font-size: 0.8rem; }
+.kanban-card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border-color: var(--primary-light); }
+.kanban-card-risk { border-left: 3px solid var(--danger); }
+.kanban-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
+.kanban-app-id { font-weight: 600; font-size: 0.75rem; color: var(--primary); }
+.kanban-card-manufacturer { font-weight: 500; margin-bottom: 0.35rem; }
+.kanban-card-meta { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.25rem; }
+.kanban-card-footer { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.7rem; padding-top: 0.25rem; border-top: 1px solid var(--border-light); }
+.kanban-empty { text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 1rem; }
+
+/* ===== Detail Views ===== */
+.detail-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; }
+
+/* ===== Timeline (Module 2) ===== */
+.timeline { padding-left: 1rem; }
+.timeline-item { display: flex; align-items: flex-start; gap: 0.75rem; padding-bottom: 1rem; position: relative; }
+.timeline-item:not(:last-child)::before { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: var(--border); }
+.timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); border: 2px solid var(--surface); flex-shrink: 0; margin-top: 2px; }
+.timeline-current .timeline-dot { background: var(--primary); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2); }
+.risk-list li, .action-list li { margin-bottom: 0.35rem; line-height: 1.5; }
+.risk-list li { color: var(--danger); }
+.action-list li { color: var(--primary); }
+
+/* ===== Country Chart (Module 2) ===== */
+.country-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+.country-item { display: flex; align-items: center; gap: 0.75rem; }
+.country-name { width: 100px; font-size: 0.85rem; text-align: right; flex-shrink: 0; }
+.country-bar-container { flex: 1; height: 18px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
+.country-bar { height: 100%; background: var(--primary); border-radius: 3px; min-width: 4px; transition: width 0.3s; }
+.country-count { width: 24px; font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }
+
+/* ===== Surveillance Heatmap (Module 5) ===== */
+.risk-heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+.heatmap-cell { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; text-align: center; transition: all 0.15s; }
+.heatmap-cell:hover { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+.heatmap-name { font-size: 0.75rem; font-weight: 500; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.heatmap-score { font-size: 1.2rem; margin-bottom: 0.15rem; }
+.heatmap-meta { display: flex; flex-direction: column; gap: 0.1rem; }
+
+/* ===== Attention List (Module 5) ===== */
+.attention-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.attention-item { display: flex; gap: 0.75rem; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); transition: all 0.15s; }
+.attention-item:hover { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+.attention-critical { border-left: 3px solid var(--danger); }
+.attention-high { border-left: 3px solid var(--danger); }
+.attention-medium { border-left: 3px solid var(--warning); }
+.attention-item p { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+.attention-badge { flex-shrink: 0; }
+
+/* ===== Complaint Cards (Module 5) ===== */
+.complaint-card { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
+.complaint-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+.complaint-desc { font-style: italic; color: var(--text); margin-bottom: 0.35rem; }
+.complaint-source { font-size: 0.8rem; color: var(--text-muted); }
+.complaint-correlation { font-size: 0.8rem; color: var(--primary); margin-top: 0.25rem; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } = Recharts;
+
+// =====================================================================
+// DATA: Applications (Module 2)
+// =====================================================================
+const STAGE_ORDER = ["Questionnaire","Manufacturer Code","Formal Submission","Engineering Review","Lab Testing","QMS Review","Final Review"];
+const STAGE_MEDIAN_DAYS = {"Questionnaire":30,"Manufacturer Code":14,"Formal Submission":21,"Engineering Review":20,"Lab Testing":45,"QMS Review":35,"Final Review":14};
+
+const APPLICATIONS = [
+  {appId:"AAR-2026-001",manufacturer:"AirShield Safety Corp",applicantType:"New Applicant",respiratorClass:"N95 FFR",currentStage:"Formal Submission",daysInStage:12,country:"USA",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"J. Martinez",slaTargetDate:"2026-04-15",intakeCompletenessScore:58,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-11-01",completedDate:"2025-11-20"},{stage:"Manufacturer Code",enteredDate:"2025-11-20",completedDate:"2025-12-05"},{stage:"Formal Submission",enteredDate:"2026-03-03"}],deficiencies:[]},
+  {appId:"AAR-2026-002",manufacturer:"BreathGuard Inc.",applicantType:"New Applicant",respiratorClass:"P100 Elastomeric Half-Mask",currentStage:"Engineering Review",daysInStage:45,country:"China",riskLevel:"HIGH",riskFactors:["New applicant with no prior NIOSH approvals","Engineering review duration 2.25x median (45 days vs. 20-day median)","2 open deficiency items unresolved","Manufacturing site in Shenzhen, China — site qualification visit not yet scheduled"],recommendedActions:["Escalate to senior reviewer for deficiency resolution","Initiate site qualification scheduling with international travel office","Request updated drawings from manufacturer within 10 business days"],assignedReviewer:"R. Thompson",slaTargetDate:"2026-02-28",intakeCompletenessScore:72,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-06-15",completedDate:"2025-07-20"},{stage:"Manufacturer Code",enteredDate:"2025-07-20",completedDate:"2025-08-01"},{stage:"Formal Submission",enteredDate:"2025-10-01",completedDate:"2025-10-28"},{stage:"Engineering Review",enteredDate:"2026-01-30",reviewer:"R. Thompson"}],deficiencies:[{id:"DEF-002-A",description:"Drawing discrepancy on valve subassembly — exhalation valve dimensions do not match specification sheet",status:"open",openedDate:"2026-02-10"},{id:"DEF-002-B",description:"Label copy pending revision — NIOSH approval number placeholder format incorrect",status:"open",openedDate:"2026-02-15"}]},
+  {appId:"AAR-2026-003",manufacturer:"ProMask Global Ltd.",applicantType:"Existing Holder",respiratorClass:"PAPR (CBRN)",currentStage:"Lab Testing",daysInStage:30,country:"Germany",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"K. Chen",slaTargetDate:"2026-05-01",intakeCompletenessScore:95,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-09-01",completedDate:"2025-09-20"},{stage:"Engineering Review",enteredDate:"2025-09-20",completedDate:"2025-11-15"},{stage:"Lab Testing",enteredDate:"2026-02-15",reviewer:"K. Chen"}],deficiencies:[]},
+  {appId:"AAR-2026-004",manufacturer:"SafeAir Technologies",applicantType:"New Applicant",respiratorClass:"N95 FFR",currentStage:"QMS Review",daysInStage:60,country:"India",riskLevel:"HIGH",riskFactors:["New applicant — first NIOSH application","QMS review duration 1.7x median (60 days vs. 35-day median)","3 open corrective actions from site qualification visit","Manufacturing site in Mumbai, India — follow-up visit required","Initial intake completeness score was low (65%)"],recommendedActions:["Schedule follow-up site qualification visit to verify corrective actions","Request updated QA Manual addressing site visit findings within 15 business days","Assign QMS specialist for accelerated review upon resubmission"],assignedReviewer:"L. Patel",slaTargetDate:"2026-03-01",intakeCompletenessScore:65,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-03-01",completedDate:"2025-04-10"},{stage:"Manufacturer Code",enteredDate:"2025-04-10",completedDate:"2025-04-25"},{stage:"Formal Submission",enteredDate:"2025-06-01",completedDate:"2025-07-15"},{stage:"Engineering Review",enteredDate:"2025-07-15",completedDate:"2025-09-10"},{stage:"Lab Testing",enteredDate:"2025-09-10",completedDate:"2025-11-20"},{stage:"QMS Review",enteredDate:"2026-01-15",reviewer:"L. Patel"}],deficiencies:[{id:"DEF-004-A",description:"Site qualification finding: incoming inspection procedure does not include sampling plan for filter media raw material",status:"open",openedDate:"2026-02-01"},{id:"DEF-004-B",description:"Site qualification finding: calibration records for flow meter used in production testing were expired",status:"open",openedDate:"2026-02-01"},{id:"DEF-004-C",description:"Site qualification finding: classification of defects does not match approved quality plan",status:"open",openedDate:"2026-02-01"}]},
+  {appId:"AAR-2026-005",manufacturer:"TrueFilter Co.",applicantType:"Existing Holder",respiratorClass:"P95 FFR",currentStage:"Final Review",daysInStage:5,country:"USA",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"M. Williams",slaTargetDate:"2026-04-01",intakeCompletenessScore:100,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-08-01",completedDate:"2025-08-15"},{stage:"Engineering Review",enteredDate:"2025-08-15",completedDate:"2025-09-10"},{stage:"Lab Testing",enteredDate:"2025-09-10",completedDate:"2025-12-01"},{stage:"QMS Review",enteredDate:"2025-12-01",completedDate:"2026-02-15"},{stage:"Final Review",enteredDate:"2026-03-12",reviewer:"M. Williams"}],deficiencies:[]},
+  {appId:"AAR-2026-006",manufacturer:"Apex Respiratory",applicantType:"Existing Holder",respiratorClass:"SCBA",currentStage:"Lab Testing",daysInStage:20,country:"USA",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"D. Brooks",slaTargetDate:"2026-06-01",intakeCompletenessScore:92,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-11-01",completedDate:"2025-11-20"},{stage:"Engineering Review",enteredDate:"2025-11-20",completedDate:"2026-01-15"},{stage:"Lab Testing",enteredDate:"2026-02-25",reviewer:"D. Brooks"}],deficiencies:[]},
+  {appId:"AAR-2026-007",manufacturer:"GlobalShield PPE",applicantType:"New Applicant",respiratorClass:"N95 FFR",currentStage:"Questionnaire",daysInStage:90,country:"Vietnam",riskLevel:"MEDIUM",riskFactors:["Questionnaire stage duration 3x median (90 days vs. 30-day median)","New applicant from country with limited NIOSH approval history","Incomplete questionnaire responses — follow-up requested but no reply in 30 days"],recommendedActions:["Send final follow-up notice with 15-day response deadline","If no response, close application and notify manufacturer of reapplication process"],assignedReviewer:"S. Kim",slaTargetDate:"2026-01-15",intakeCompletenessScore:0,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-12-17",reviewer:"S. Kim"}],deficiencies:[]},
+  {appId:"AAR-2026-008",manufacturer:"ClearBreath Mfg.",applicantType:"Existing Holder",respiratorClass:"Elastomeric Full-Face",currentStage:"Engineering Review",daysInStage:15,country:"South Korea",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"R. Thompson",slaTargetDate:"2026-05-01",intakeCompletenessScore:98,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-12-01",completedDate:"2025-12-18"},{stage:"Engineering Review",enteredDate:"2026-03-02",reviewer:"R. Thompson"}],deficiencies:[]},
+  {appId:"AAR-2026-009",manufacturer:"SecureAir Ltd.",applicantType:"New Applicant",respiratorClass:"Gas Mask (CBRN)",currentStage:"Formal Submission",daysInStage:8,country:"UK",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"J. Martinez",slaTargetDate:"2026-05-15",intakeCompletenessScore:88,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-08-01",completedDate:"2025-09-01"},{stage:"Manufacturer Code",enteredDate:"2025-09-01",completedDate:"2025-09-15"},{stage:"Formal Submission",enteredDate:"2026-03-09"}],deficiencies:[]},
+  {appId:"AAR-2026-010",manufacturer:"PrimeSafe Corp.",applicantType:"Existing Holder",respiratorClass:"SAR Type C",currentStage:"Final Review",daysInStage:3,country:"USA",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"M. Williams",slaTargetDate:"2026-04-01",intakeCompletenessScore:100,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-05-01",completedDate:"2025-05-20"},{stage:"Engineering Review",enteredDate:"2025-05-20",completedDate:"2025-07-01"},{stage:"Lab Testing",enteredDate:"2025-07-01",completedDate:"2025-10-15"},{stage:"QMS Review",enteredDate:"2025-10-15",completedDate:"2026-01-20"},{stage:"Final Review",enteredDate:"2026-03-14",reviewer:"M. Williams"}],deficiencies:[]},
+  {appId:"AAR-2026-011",manufacturer:"NovaBreathe Inc.",applicantType:"New Applicant",respiratorClass:"N95 FFR",currentStage:"QMS Review",daysInStage:40,country:"Mexico",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"L. Patel",slaTargetDate:"2026-04-30",intakeCompletenessScore:82,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-04-01",completedDate:"2025-05-01"},{stage:"Manufacturer Code",enteredDate:"2025-05-01",completedDate:"2025-05-15"},{stage:"Formal Submission",enteredDate:"2025-07-01",completedDate:"2025-07-25"},{stage:"Engineering Review",enteredDate:"2025-07-25",completedDate:"2025-09-15"},{stage:"Lab Testing",enteredDate:"2025-09-15",completedDate:"2025-12-10"},{stage:"QMS Review",enteredDate:"2026-02-05",reviewer:"L. Patel"}],deficiencies:[]},
+  {appId:"AAR-2026-012",manufacturer:"OmniFilter Tech",applicantType:"Existing Holder",respiratorClass:"CCER",currentStage:"Lab Testing",daysInStage:55,country:"Japan",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"K. Chen",slaTargetDate:"2026-05-15",intakeCompletenessScore:96,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-08-15",completedDate:"2025-09-01"},{stage:"Engineering Review",enteredDate:"2025-09-01",completedDate:"2025-10-20"},{stage:"Lab Testing",enteredDate:"2026-01-22",reviewer:"K. Chen"}],deficiencies:[]},
+  {appId:"AAR-2026-013",manufacturer:"ReliaMask Co.",applicantType:"New Applicant",respiratorClass:"P100 FFR",currentStage:"Engineering Review",daysInStage:35,country:"China",riskLevel:"MEDIUM",riskFactors:["New applicant with no prior NIOSH approvals","Engineering review duration 1.75x median (35 days vs. 20-day median)","1 open deficiency item pending manufacturer response","Manufacturing site in Guangzhou, China"],recommendedActions:["Follow up with manufacturer on open deficiency item","Begin site qualification planning for Guangzhou facility"],assignedReviewer:"R. Thompson",slaTargetDate:"2026-04-15",intakeCompletenessScore:78,stageHistory:[{stage:"Questionnaire",enteredDate:"2025-07-01",completedDate:"2025-08-05"},{stage:"Manufacturer Code",enteredDate:"2025-08-05",completedDate:"2025-08-20"},{stage:"Formal Submission",enteredDate:"2025-10-15",completedDate:"2025-11-10"},{stage:"Engineering Review",enteredDate:"2026-02-10",reviewer:"R. Thompson"}],deficiencies:[{id:"DEF-013-A",description:"Filter media specification sheet lists different material grade than what appears in the assembly drawing",status:"open",openedDate:"2026-02-25"}]},
+  {appId:"AAR-2026-014",manufacturer:"Vanguard Safety",applicantType:"Existing Holder",respiratorClass:"PAPR",currentStage:"Final Review",daysInStage:7,country:"Canada",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"M. Williams",slaTargetDate:"2026-04-01",intakeCompletenessScore:100,stageHistory:[{stage:"Formal Submission",enteredDate:"2025-06-01",completedDate:"2025-06-20"},{stage:"Engineering Review",enteredDate:"2025-06-20",completedDate:"2025-08-10"},{stage:"Lab Testing",enteredDate:"2025-08-10",completedDate:"2025-11-30"},{stage:"QMS Review",enteredDate:"2025-11-30",completedDate:"2026-02-20"},{stage:"Final Review",enteredDate:"2026-03-10",reviewer:"M. Williams"}],deficiencies:[]},
+  {appId:"AAR-2026-015",manufacturer:"PureAir Dynamics",applicantType:"New Applicant",respiratorClass:"Elastomeric Half-Mask",currentStage:"Questionnaire",daysInStage:10,country:"USA",riskLevel:"NONE",riskFactors:[],recommendedActions:[],assignedReviewer:"S. Kim",slaTargetDate:"2026-05-01",intakeCompletenessScore:0,stageHistory:[{stage:"Questionnaire",enteredDate:"2026-03-07",reviewer:"S. Kim"}],deficiencies:[]}
+];
+
+const THROUGHPUT_DATA = [
+  {quarter:"Q1 2025",approvals:8,denials:2,pending:12},
+  {quarter:"Q2 2025",approvals:11,denials:3,pending:15},
+  {quarter:"Q3 2025",approvals:9,denials:1,pending:18},
+  {quarter:"Q4 2025",approvals:12,denials:2,pending:14},
+  {quarter:"Q1 2026",approvals:5,denials:1,pending:15}
+];
+
+const AVG_DAYS_BY_CLASS = [
+  {className:"N95 FFR",avgDays:185},{className:"P95/P100 FFR",avgDays:210},{className:"Elastomeric",avgDays:240},
+  {className:"PAPR",avgDays:280},{className:"SCBA",avgDays:310},{className:"CBRN",avgDays:350},
+  {className:"Gas Mask",avgDays:260},{className:"SAR",avgDays:230},{className:"CCER",avgDays:270}
+];
+
+// =====================================================================
+// DATA: SAP Rules (Module 1)
+// =====================================================================
+const FFR_SAP_CHECKLIST = {
+  respiratorClass:"Filtering Facepiece Respirator (FFR)",
+  sapTitle:"Standard Application Procedure for Air-Purifying Filtering Facepiece Respirators",
+  items:[
+    {id:1,requirement:"Completed Standard Application Form",sapSection:"SAP Section 3.1",cfrReference:"42 CFR 84.11(a)",severity:"critical",description:"Standard Application Form must be fully completed with all required fields."},
+    {id:2,requirement:"Application fee ($200 check, dated within 30 days, AAR# on check)",sapSection:"SAP Section 3.2",cfrReference:"42 CFR Part 84 Subpart C",severity:"critical",description:"A $200 check payable to NIOSH must be included."},
+    {id:3,requirement:"Assembly Matrix (all hardware configurations)",sapSection:"SAP Section 4.1",cfrReference:"42 CFR 84.11(b)",severity:"major",description:"A complete assembly matrix listing every hardware configuration."},
+    {id:4,requirement:"Exploded-view drawings per Drawing Checklist (Section 6.2)",sapSection:"SAP Section 6.2",cfrReference:"42 CFR 84.11(b)",severity:"major",description:"Exploded-view engineering drawings showing all components and subassemblies."},
+    {id:5,requirement:"All Major Subassemblies documentation",sapSection:"SAP Section 6.3",cfrReference:"42 CFR 84.11(b)",severity:"major",description:"Documentation for all major subassemblies including supplier information."},
+    {id:6,requirement:"Packaging and label copy",sapSection:"SAP Section 4.3",cfrReference:"42 CFR 84.33",severity:"major",description:"Final packaging design and label copy showing all required NIOSH markings."},
+    {id:7,requirement:"Detailed user instructions",sapSection:"SAP Section 4.4",cfrReference:"42 CFR 84.11(d)",severity:"major",description:"Complete user instructions covering donning/doffing, fit check procedures."},
+    {id:8,requirement:"Product Quality Plan",sapSection:"SAP Section 5.1",cfrReference:"42 CFR 84.41-84.43",severity:"critical",description:"Quality plan must include inspection procedures, classification of defects."},
+    {id:9,requirement:"Quality Assurance Manual",sapSection:"SAP Section 5.2 / CA 2021-1034R1",cfrReference:"42 CFR 84.41(b)",severity:"critical",description:"Complete QA Manual covering the manufacturing facility's quality management system."},
+    {id:10,requirement:"Test samples (produced under complete proposed QMS)",sapSection:"SAP Section 4.5",cfrReference:"42 CFR 84.11(c)",severity:"critical",description:"Physical test samples of the respirator produced under the complete proposed QMS."},
+    {id:11,requirement:"Media format: CD-R or DVD-R",sapSection:"SAP Section 3.3",cfrReference:"42 CFR 84.11",severity:"major",description:"All documentation must be submitted on CD-R or DVD-R media."},
+    {id:12,requirement:"Private Label Checklist (Section 6.3 for FFRs)",sapSection:"SAP Section 6.3",cfrReference:"42 CFR 84.33(b)",severity:"major",description:"Required only for private label applications."}
+  ]
+};
+
+const SAMPLE_APPLICATION = {
+  applicationId:"AAR-2026-001",manufacturerName:"AirShield Safety Corp",manufacturerCode:"ASC",respiratorClass:"N95 Filtering Facepiece Respirator",modelDesignation:"AirShield ProGuard N95-200",submissionDate:"2026-03-15",isPrivateLabel:false,
+  documents:[
+    {checklistItemId:1,present:true,compliant:true,notes:"Standard Application Form complete. All fields populated."},
+    {checklistItemId:2,present:true,compliant:false,notes:"Check present but dated 2026-01-29 (45 days before submission).",deficiencyDetail:"The application fee check is dated January 29, 2026 — 45 days before the submission date."},
+    {checklistItemId:3,present:true,compliant:true,notes:"Assembly matrix provided. Lists 3 size variants (S, M, L) with consistent hardware."},
+    {checklistItemId:4,present:true,compliant:false,notes:"Exploded-view drawing present but incomplete. Nose-clip subassembly not shown.",deficiencyDetail:"The exploded-view drawing is missing the nose-clip subassembly detail."},
+    {checklistItemId:5,present:true,compliant:false,notes:"Major subassemblies documented, but headband elastic supplier info is missing.",deficiencyDetail:"The subassembly documentation does not include supplier information for the headband elastic component."},
+    {checklistItemId:6,present:true,compliant:true,notes:"Packaging and label copy provided. NIOSH markings placeholder included correctly."},
+    {checklistItemId:7,present:true,compliant:true,notes:"User instructions complete. Covers donning, fit check, limitations, and storage."},
+    {checklistItemId:8,present:true,compliant:false,notes:"Quality plan present but sampling plan incomplete. References ISO 2859-1 without specifying AQL levels.",deficiencyDetail:"The Product Quality Plan references ISO 2859-1 for sampling but does not specify AQL values."},
+    {checklistItemId:9,present:true,compliant:false,notes:"QA Manual present but missing supplier/subcontractor agreement documentation.",deficiencyDetail:"Your Quality Assurance Manual does not include documentation of supplier and subcontractor agreements."},
+    {checklistItemId:10,present:true,compliant:true,notes:"Test samples received. 20 units from production run under documented QMS."},
+    {checklistItemId:11,present:true,compliant:false,notes:"Documentation submitted on USB thumb drive instead of CD-R/DVD-R.",deficiencyDetail:"Application materials were submitted on a USB thumb drive."},
+    {checklistItemId:12,present:false,compliant:true,notes:"Not applicable — this is not a private label application."}
+  ]
+};
+
+const AI_GUIDANCE = [
+  {checklistItemId:2,guidance:'Your application fee check is dated January 29, 2026, which is 45 days before your submission date. The Standard Application Procedure requires that the check be dated within 30 days of submission. Please issue a new $200 check payable to "NIOSH" dated no earlier than 30 days before your intended resubmission date. Write your AAR number (AAR-2026-001) on the check.',references:["SAP for FFRs, Section 3.2 — Application Fee Requirements","42 CFR Part 84, Subpart C — Fees"]},
+  {checklistItemId:4,guidance:"Your exploded-view drawing does not include the nose-clip subassembly. The SAP Drawing Checklist (Section 6.2) requires that all components be individually identified with part numbers and material specifications. For the nose clip, you must show: (1) the metal nose-clip strip with material and gauge, (2) the nose foam cushion with material type, (3) the attachment method to the facepiece body. Please update your drawing to include these details and resubmit.",references:["SAP for FFRs, Section 6.2 — Exploded-View Drawing Checklist","42 CFR 84.11(b) — Application Requirements"]},
+  {checklistItemId:5,guidance:"Your subassembly documentation is missing supplier information for the headband elastic. For every externally sourced component, you must provide: the supplier name and location, the supplier's part number, the material specification, and evidence of a supplier qualification or agreement.",references:["SAP for FFRs, Section 6.3 — All Major Subassemblies Checklist","CA 2021-1034R1 — Supplier/Subcontractor Agreements","42 CFR 84.41(b) — Quality Control Requirements"]},
+  {checklistItemId:8,guidance:"Your Product Quality Plan references ISO 2859-1 for acceptance sampling but does not define specific AQL (Acceptable Quality Level) values for each defect classification. Under 42 CFR 84.41, your quality plan must include: (1) a classification of defects into critical, major, and minor categories; (2) specific AQL levels for each category; and (3) the corresponding sampling level. Typical AQL values used in the industry are 0.065 for critical defects, 1.0 for major defects, and 4.0 for minor defects.",references:["42 CFR 84.41 — Quality Control Plans","42 CFR 84.42 — Classification of Defects","42 CFR 84.43 — Sampling Plans","NIOSH Publication 2023-132 — Know Before You Apply"]},
+  {checklistItemId:9,guidance:"Your Quality Assurance Manual does not include documentation of supplier and subcontractor agreements. Per Conformity Assessment Notice CA 2021-1034R1 and 42 CFR 84.41(b), your QA manual must describe how you ensure that components sourced from suppliers and subcontractors meet the specifications established in your quality plan. This includes: (1) signed supplier quality agreements or equivalent documentation; (2) a supplier qualification/audit procedure; (3) incoming inspection requirements for supplied components. Please update your QA Manual and resubmit.",references:["CA 2021-1034R1 — Summary of Application Procedures and QA Requirements","42 CFR 84.41(b) — Quality Control Plans","SAP for FFRs, Section 5.2 — Quality Assurance Manual Requirements"]},
+  {checklistItemId:11,guidance:"Your application materials were submitted on a USB thumb drive, which is not an accepted media format. NIOSH requires all documentation to be provided on CD-R (recordable compact disc) or DVD-R (recordable DVD) media only. Rewritable discs (CD-RW, DVD-RW), USB drives, and cloud-based submissions are not accepted. Please copy all files to a CD-R or DVD-R and resubmit.",references:["SAP for FFRs, Section 3.3 — Submission Media Requirements"]}
+];
+
+// =====================================================================
+// DATA: Surveillance (Module 5)
+// =====================================================================
+const FIELD_AUDIT_RESULTS = [
+  {auditId:"FA-2026-041",manufacturer:"BreathGuard Inc.",tcNumber:"TC 84A-1234",product:"N95 FFR Model BG-200",testType:"NaCl Filtration Efficiency",originalBenchmark:98.2,latestResult:97.8,drift:-0.4,unit:"%",threshold:95,thresholdDirection:"min",status:"pass",auditDate:"2026-02-15"},
+  {auditId:"FA-2026-042",manufacturer:"BreathGuard Inc.",tcNumber:"TC 84A-1234",product:"N95 FFR Model BG-200",testType:"Inhalation Resistance",originalBenchmark:33,latestResult:34,drift:1.0,unit:"mmH\u2082O",threshold:35,thresholdDirection:"max",status:"pass",auditDate:"2026-02-15"},
+  {auditId:"FA-2026-043",manufacturer:"BreathGuard Inc.",tcNumber:"TC 84A-1234",product:"N95 FFR Model BG-200",testType:"Exhalation Resistance",originalBenchmark:22,latestResult:23,drift:1.0,unit:"mmH\u2082O",threshold:25,thresholdDirection:"max",status:"pass",auditDate:"2026-02-15"},
+  {auditId:"FA-2026-044",manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"NaCl Filtration Efficiency",originalBenchmark:99.1,latestResult:96.2,drift:-2.9,unit:"%",threshold:95,thresholdDirection:"min",status:"warning",auditDate:"2026-03-01"},
+  {auditId:"FA-2026-045",manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"Inhalation Resistance",originalBenchmark:30,latestResult:38,drift:8.0,unit:"mmH\u2082O",threshold:35,thresholdDirection:"max",status:"warning",auditDate:"2026-03-01"},
+  {auditId:"FA-2026-046",manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"Exhalation Resistance",originalBenchmark:21,latestResult:26,drift:5.0,unit:"mmH\u2082O",threshold:25,thresholdDirection:"max",status:"warning",auditDate:"2026-03-01"},
+  {auditId:"FA-2026-047",manufacturer:"TrueFilter Co.",tcNumber:"TC 84A-9012",product:"P95 FFR Model TF-100",testType:"DOP Filtration Efficiency",originalBenchmark:97.5,latestResult:97.3,drift:-0.2,unit:"%",threshold:95,thresholdDirection:"min",status:"pass",auditDate:"2026-01-20"}
+];
+
+const AUDIT_TRENDS = [
+  {manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"NaCl Filtration Efficiency",unit:"%",threshold:95,thresholdDirection:"min",dataPoints:[{quarter:"Q1 2025",value:99.1},{quarter:"Q2 2025",value:98.4},{quarter:"Q3 2025",value:97.1},{quarter:"Q1 2026",value:96.2}]},
+  {manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"Inhalation Resistance",unit:"mmH\u2082O",threshold:35,thresholdDirection:"max",dataPoints:[{quarter:"Q1 2025",value:30},{quarter:"Q2 2025",value:32},{quarter:"Q3 2025",value:34},{quarter:"Q1 2026",value:38}]},
+  {manufacturer:"SafeAir Technologies",tcNumber:"TC 84A-5678",product:"N95 FFR Model SA-Pro",testType:"Exhalation Resistance",unit:"mmH\u2082O",threshold:25,thresholdDirection:"max",dataPoints:[{quarter:"Q1 2025",value:21},{quarter:"Q2 2025",value:22},{quarter:"Q3 2025",value:24},{quarter:"Q1 2026",value:26}]}
+];
+
+const COMPLAINTS = [
+  {complaintId:"CMP-2026-301",date:"2026-02-15",source:"End User",manufacturer:"SafeAir Technologies",product:"SA-Pro N95",description:"Difficulty breathing through mask, feels more restricted than previous batches",aiSeverity:"High",aiPriority:1,aiRationale:"Complaint correlates with field audit FA-2026-045 showing inhalation resistance at 38 mmH\u2082O (exceeds 35 mmH\u2082O limit).",aiRecommendation:"Initiate CPIP — correlated with field audit failure on inhalation resistance",correlatedAuditIds:["FA-2026-045"],status:"open"},
+  {complaintId:"CMP-2026-302",date:"2026-02-18",source:"Employer (Hospital)",manufacturer:"SafeAir Technologies",product:"SA-Pro N95",description:"Fit test failure rates increased from 5% to 22% in latest shipment",aiSeverity:"High",aiPriority:1,aiRationale:"Second complaint about SafeAir SA-Pro N95 within 3 days. Fit test failure rate increase of 340% suggests significant change in product characteristics.",aiRecommendation:"Escalate — pattern cluster detected. Request product samples from affected lot for independent testing.",correlatedAuditIds:["FA-2026-044","FA-2026-045"],status:"open"},
+  {complaintId:"CMP-2026-303",date:"2026-02-20",source:"End User",manufacturer:"SafeAir Technologies",product:"SA-Pro N95",description:"Nose clip feels different, less adjustable",aiSeverity:"Medium",aiPriority:2,aiRationale:"Third SafeAir SA-Pro complaint in 5 days. Nose clip change could indicate unauthorized design or material modification.",aiRecommendation:"Link to existing SafeAir investigation. Request manufacturer confirm no design changes to nose clip component.",correlatedAuditIds:[],status:"open"},
+  {complaintId:"CMP-2026-304",date:"2026-03-01",source:"Distributor",manufacturer:"GlobalShield PPE",product:"GS-100 N95",description:"Customer returned batch, packaging looks different than usual",aiSeverity:"Medium",aiPriority:3,aiRationale:"Packaging anomaly from distributor channel. Could indicate counterfeit product or unauthorized packaging change.",aiRecommendation:"Flag for counterfeit investigation — verify if GlobalShield PPE holds any active NIOSH approvals via CEL lookup.",correlatedAuditIds:[],status:"open"},
+  {complaintId:"CMP-2026-305",date:"2026-03-05",source:"End User",manufacturer:"ReliaMask Co.",product:"RM-50 P100",description:"Cartridge smells unusual when breathing through it",aiSeverity:"Low",aiPriority:4,aiRationale:"Single isolated report. No correlated field audit data or prior complaints for this product.",aiRecommendation:"Monitor — log complaint and request follow-up details from user. No immediate action required.",correlatedAuditIds:[],status:"open"},
+  {complaintId:"CMP-2026-306",date:"2026-03-10",source:"OSHA Referral",manufacturer:"Unknown",product:"Unlabeled N95",description:"Workers using respirators with no visible TC number or NIOSH markings",aiSeverity:"High",aiPriority:1,aiRationale:"OSHA referral indicates workers exposed to potential counterfeit/misrepresented respirators.",aiRecommendation:"Initiate counterfeit investigation immediately. Request product samples from OSHA.",correlatedAuditIds:[],status:"open"}
+];
+
+const COUNTERFEIT_ALERTS = [
+  {alertId:"CTF-2026-101",date:"2026-01-20",source:"Marketplace Scan",product:'"ZelGuard N95"',claimedTcNumber:"TC 84A-0000",celMatch:"no_match",celMatchLabel:"No Match",issue:'TC number does not exist in CEL. "ZelGuard" is not a registered approval holder.',status:"Open — CPIP initiated"},
+  {alertId:"CTF-2026-102",date:"2026-02-05",source:"Marketplace Scan",product:'"BreathBuddy P100 Filter"',claimedTcNumber:"TC 84A-3456",celMatch:"mismatch",celMatchLabel:"Mismatch",issue:"TC number belongs to a different manufacturer (not BreathBuddy).",status:"Open — Referral to enforcement"},
+  {alertId:"CTF-2026-103",date:"2026-02-28",source:"Tip from distributor",product:"N95 FFR (unmarked)",claimedTcNumber:"None visible",celMatch:"not_applicable",celMatchLabel:"N/A",issue:'No NIOSH markings present. Product sold online as "NIOSH Approved" without any TC number.',status:"Open — Samples requested for testing"},
+  {alertId:"CTF-2026-104",date:"2026-03-12",source:"Automated label scan",product:'"SafeAir SA-Pro" (suspected counterfeit)',claimedTcNumber:"TC 84A-5678",celMatch:"match_suspect",celMatchLabel:"Match but Suspect",issue:"TC number matches SafeAir Technologies, but packaging shows inconsistencies.",status:"Under review"}
+];
+
+const SURVEILLANCE_KPIS = {activeApprovalHolders:98,fieldAuditsCompleted:377,openComplaints:24,highPriorityComplaints:6,activeCounterfeitInvestigations:4,overdueForSiteVisit:3,fraudulentListingsInvestigatedYTD:4163};
+
+const MANUFACTURER_RISKS = [
+  {name:"SafeAir Technologies",riskScore:85,auditTrend:"declining",openComplaints:3,lastSiteVisit:"2025-06-15",overdue:false},
+  {name:"BreathGuard Inc.",riskScore:25,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2025-09-01",overdue:false},
+  {name:"TrueFilter Co.",riskScore:10,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2025-11-15",overdue:false},
+  {name:"GlobalShield PPE",riskScore:55,auditTrend:"stable",openComplaints:1,lastSiteVisit:"N/A",overdue:false},
+  {name:"ReliaMask Co.",riskScore:20,auditTrend:"stable",openComplaints:1,lastSiteVisit:"N/A",overdue:false},
+  {name:"Apex Respiratory",riskScore:12,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2025-03-10",overdue:false},
+  {name:"ProMask Global Ltd.",riskScore:8,auditTrend:"improving",openComplaints:0,lastSiteVisit:"2025-08-22",overdue:false},
+  {name:"Vanguard Safety",riskScore:5,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2025-12-01",overdue:false},
+  {name:"OmniFilter Tech",riskScore:15,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2024-01-15",overdue:true},
+  {name:"ClearBreath Mfg.",riskScore:10,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2025-10-05",overdue:false},
+  {name:"PrimeSafe Corp.",riskScore:7,auditTrend:"stable",openComplaints:0,lastSiteVisit:"2023-11-20",overdue:true},
+  {name:"NovaBreathe Inc.",riskScore:18,auditTrend:"stable",openComplaints:0,lastSiteVisit:"N/A",overdue:false},
+  {name:"SecureAir Ltd.",riskScore:14,auditTrend:"stable",openComplaints:0,lastSiteVisit:"N/A",overdue:false},
+  {name:"AirShield Safety Corp",riskScore:22,auditTrend:"stable",openComplaints:0,lastSiteVisit:"N/A",overdue:false},
+  {name:"Meridian Respirators",riskScore:30,auditTrend:"declining",openComplaints:1,lastSiteVisit:"2024-02-10",overdue:true}
+];
+
+// =====================================================================
+// MODULE 1: Intelligent Intake & Pre-Screening
+// =====================================================================
+function StatusBadge({ status }) {
+  const styles = { pass:"badge-pass", fail:"badge-fail", warning:"badge-warning", na:"badge-na" };
+  const labels = { pass:"PASS", fail:"FAIL", warning:"WARNING", na:"N/A" };
+  return <span className={`badge ${styles[status]}`}>{labels[status]}</span>;
+}
+
+function SeverityBadge({ severity }) {
+  const styles = { critical:"badge-fail", major:"badge-warning", minor:"badge-na" };
+  return <span className={`badge ${styles[severity] || "badge-na"}`}>{severity.toUpperCase()}</span>;
+}
+
+function UploadScreen({ onUpload }) {
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const handleUpload = () => {
+    setUploading(true);
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) { clearInterval(interval); setTimeout(onUpload, 300); return 100; }
+        return p + 20;
+      });
+    }, 400);
+  };
+
+  return (
+    <div className="card">
+      <h2>Upload Application Package</h2>
+      <p style={{color:"var(--text-muted)",marginBottom:"1.5rem"}}>
+        Upload a respirator approval application package for automated pre-screening against the applicable Standard Application Procedure.
+      </p>
+      <div className={`upload-zone ${dragging ? "dragging" : ""}`}
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={e => { e.preventDefault(); setDragging(false); handleUpload(); }}
+        onClick={handleUpload}>
+        {!uploading ? (<>
+          <div style={{fontSize:"2rem",marginBottom:"0.5rem"}}>+</div>
+          <p><strong>Click or drag files</strong> to upload application package</p>
+          <p style={{color:"var(--text-muted)",fontSize:"0.85rem"}}>Accepted: CD-R/DVD-R image files, or structured data (JSON)</p>
+        </>) : (<>
+          <p style={{marginBottom:"0.5rem"}}><strong>Processing application package...</strong></p>
+          <div className="progress-bar"><div className="progress-fill" style={{width:`${progress}%`}} /></div>
+          <p style={{color:"var(--text-muted)",fontSize:"0.85rem",marginTop:"0.5rem"}}>
+            {progress < 40 ? "Identifying respirator class..." : progress < 70 ? "Selecting SAP checklist for FFR..." : progress < 100 ? "Parsing documents and cross-referencing..." : "Complete — generating report"}
+          </p>
+        </>)}
+      </div>
+      <div className="info-box" style={{marginTop:"1.5rem"}}>
+        <strong>Demo Note:</strong> This will load a simulated application from AirShield Safety Corp for an N95 FFR, pre-populated with realistic deficiencies for demonstration purposes.
+      </div>
+    </div>
+  );
+}
+
+function getDocStatus(doc) {
+  if (!doc.present && doc.compliant) return "na";
+  if (!doc.present) return "fail";
+  if (!doc.compliant) return "fail";
+  return "pass";
+}
+
+function CompletenessReport({ app, onNext }) {
+  const checklist = FFR_SAP_CHECKLIST;
+  const passCount = app.documents.filter(d => d.present && d.compliant).length;
+  const failCount = app.documents.filter(d => d.present && !d.compliant).length;
+  const naCount = app.documents.filter(d => !d.present && d.compliant).length;
+
+  return (
+    <div className="card">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
+        <div>
+          <h2>Completeness Report</h2>
+          <p style={{color:"var(--text-muted)"}}>{app.manufacturerName} — {app.modelDesignation}</p>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div className="kpi-value" style={{color:failCount > 0 ? "var(--danger)" : "var(--success)"}}>{passCount} / {app.documents.length - naCount}</div>
+          <div style={{color:"var(--text-muted)",fontSize:"0.85rem"}}>requirements met</div>
+        </div>
+      </div>
+      <div className="info-box" style={{marginBottom:"1rem"}}>
+        <strong>SAP Applied:</strong> {checklist.sapTitle}<br/>
+        <strong>Respirator Class:</strong> {checklist.respiratorClass}<br/>
+        <strong>Application ID:</strong> {app.applicationId} | <strong>Submitted:</strong> {app.submissionDate}
+      </div>
+      <table className="data-table">
+        <thead><tr><th style={{width:"50px"}}>#</th><th>Requirement</th><th style={{width:"100px"}}>Status</th><th style={{width:"100px"}}>Severity</th><th>Notes</th></tr></thead>
+        <tbody>
+          {checklist.items.map(item => {
+            const doc = app.documents.find(d => d.checklistItemId === item.id);
+            if (!doc) return null;
+            const status = getDocStatus(doc);
+            return (
+              <tr key={item.id} className={status === "fail" ? "row-fail" : ""}>
+                <td>{item.id}</td>
+                <td><strong>{item.requirement}</strong><br/><span style={{fontSize:"0.8rem",color:"var(--text-muted)"}}>{item.sapSection} | {item.cfrReference}</span></td>
+                <td><StatusBadge status={status} /></td>
+                <td>{status === "fail" && <SeverityBadge severity={item.severity} />}</td>
+                <td style={{fontSize:"0.9rem"}}>{doc.notes}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div style={{marginTop:"1.5rem",textAlign:"right"}}><button className="btn btn-primary" onClick={onNext}>View AI Remediation Guidance</button></div>
+    </div>
+  );
+}
+
+function GuidanceScreen({ guidance, onNext }) {
+  const checklist = FFR_SAP_CHECKLIST;
+  return (
+    <div className="card">
+      <h2>AI-Generated Remediation Guidance</h2>
+      <p style={{color:"var(--text-muted)",marginBottom:"1.5rem"}}>For each deficiency, the system provides specific remediation guidance drawn from the applicable SAP, Conformity Assessment Notices, and 42 CFR Part 84.</p>
+      <div className="info-box" style={{marginBottom:"1.5rem"}}><strong>Human Review Notice:</strong> This guidance is AI-generated to assist applicants and reviewers. All recommendations should be verified by a qualified NIOSH reviewer before being issued as official correspondence.</div>
+      {guidance.map(g => {
+        const item = checklist.items.find(i => i.id === g.checklistItemId);
+        return (
+          <div key={g.checklistItemId} className="guidance-card">
+            <div className="guidance-header">
+              <SeverityBadge severity={item?.severity || "major"} />
+              <strong style={{marginLeft:"0.5rem"}}>Item {g.checklistItemId}: {item?.requirement}</strong>
+            </div>
+            <div className="guidance-body">
+              <p>{g.guidance}</p>
+              <div className="guidance-refs"><strong>References:</strong><ul>{g.references.map((ref, i) => <li key={i}>{ref}</li>)}</ul></div>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{marginTop:"1.5rem",textAlign:"right"}}><button className="btn btn-primary" onClick={onNext}>View Summary & Export</button></div>
+    </div>
+  );
+}
+
+function SummaryScreen({ app, onRestart }) {
+  const passCount = app.documents.filter(d => d.present && d.compliant).length;
+  const failCount = app.documents.filter(d => d.present && !d.compliant).length;
+  const totalApplicable = app.documents.filter(d => d.present || !d.compliant).length;
+  const criticalCount = app.documents.filter(d => {
+    if (d.present && d.compliant) return false;
+    if (!d.present && d.compliant) return false;
+    const item = FFR_SAP_CHECKLIST.items.find(i => i.id === d.checklistItemId);
+    return item?.severity === "critical";
+  }).length;
+  const majorCount = failCount - criticalCount;
+  const pct = Math.round((passCount / totalApplicable) * 100);
+
+  return (
+    <div className="card">
+      <h2>Pre-Screening Summary</h2>
+      <p style={{color:"var(--text-muted)",marginBottom:"1.5rem"}}>{app.manufacturerName} — {app.modelDesignation} ({app.applicationId})</p>
+      <div className="kpi-row">
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--success)"}}>{passCount}</div><div className="kpi-label">Requirements Met</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>{failCount}</div><div className="kpi-label">Deficiencies Found</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>{criticalCount}</div><div className="kpi-label">Critical</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--warning)"}}>{majorCount}</div><div className="kpi-label">Major</div></div>
+      </div>
+      <div style={{marginTop:"1.5rem"}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"0.25rem"}}><span>Submission Readiness</span><span>{pct}%</span></div>
+        <div className="progress-bar"><div className="progress-fill" style={{width:`${pct}%`,backgroundColor:pct > 80 ? "var(--success)" : pct > 50 ? "var(--warning)" : "var(--danger)"}} /></div>
+      </div>
+      <div className="info-box" style={{marginTop:"1.5rem",borderColor:"var(--danger)",backgroundColor:"rgba(220, 38, 38, 0.05)"}}>
+        <strong>Recommendation:</strong> This application package has {criticalCount} critical and {majorCount} major deficiencies that must be resolved before it can proceed to formal review. The applicant should address all items identified in the remediation guidance and resubmit.
+      </div>
+      <div style={{marginTop:"1.5rem",display:"flex",gap:"0.75rem",justifyContent:"flex-end"}}>
+        <button className="btn btn-secondary" onClick={onRestart}>Screen Another Application</button>
+        <button className="btn btn-primary">Export PDF Report</button>
+        <button className="btn btn-secondary">Forward to Reviewer</button>
+      </div>
+    </div>
+  );
+}
+
+function IntakePreScreening() {
+  const [screen, setScreen] = useState("upload");
+  const screenOrder = ["upload","report","guidance","summary"];
+  const screenLabels = ["Upload & Parse","Completeness Report","AI Guidance","Summary"];
+
+  return (
+    <div>
+      <div className="module-header">
+        <h1>Module 1: Intelligent Intake & Pre-Screening</h1>
+        <p>Automated review of application packages against Standard Application Procedures, with AI-generated remediation guidance.</p>
+      </div>
+      <div className="steps">
+        {screenOrder.map((key, i) => (
+          <div key={key} className={`step ${screen === key ? "step-active" : ""} ${screenOrder.indexOf(screen) > i ? "step-complete" : ""}`}
+            onClick={() => { if (screenOrder.indexOf(screen) >= i) setScreen(key); }}>
+            <div className="step-number">{i + 1}</div>
+            <div className="step-label">{screenLabels[i]}</div>
+          </div>
+        ))}
+      </div>
+      {screen === "upload" && <UploadScreen onUpload={() => setScreen("report")} />}
+      {screen === "report" && <CompletenessReport app={SAMPLE_APPLICATION} onNext={() => setScreen("guidance")} />}
+      {screen === "guidance" && <GuidanceScreen guidance={AI_GUIDANCE} onNext={() => setScreen("summary")} />}
+      {screen === "summary" && <SummaryScreen app={SAMPLE_APPLICATION} onRestart={() => setScreen("upload")} />}
+    </div>
+  );
+}
+
+// =====================================================================
+// MODULE 2: Application Lifecycle Tracker
+// =====================================================================
+function RiskBadge({ level }) {
+  if (level === "NONE") return null;
+  const cls = level === "HIGH" ? "badge-fail" : level === "MEDIUM" ? "badge-warning" : "badge-pass";
+  return <span className={`badge ${cls}`}>{level} RISK</span>;
+}
+
+function KanbanBoard({ onSelectApp }) {
+  const atRiskCount = APPLICATIONS.filter(a => a.riskLevel !== "NONE").length;
+  return (
+    <div>
+      <div className="kpi-row" style={{marginBottom:"1.5rem"}}>
+        <div className="kpi-card"><div className="kpi-value">{APPLICATIONS.length}</div><div className="kpi-label">Active Applications</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>{atRiskCount}</div><div className="kpi-label">Flagged At-Risk</div></div>
+        {STAGE_ORDER.map(stage => {
+          const count = APPLICATIONS.filter(a => a.currentStage === stage).length;
+          if (count === 0) return null;
+          return <div className="kpi-card" key={stage}><div className="kpi-value">{count}</div><div className="kpi-label">{stage}</div></div>;
+        })}
+      </div>
+      <div className="kanban-board">
+        {STAGE_ORDER.map(stage => {
+          const apps = APPLICATIONS.filter(a => a.currentStage === stage);
+          return (
+            <div className="kanban-column" key={stage}>
+              <div className="kanban-column-header"><span>{stage}</span><span className="kanban-count">{apps.length}</span></div>
+              {apps.map(app => (
+                <div className={`kanban-card ${app.riskLevel !== "NONE" ? "kanban-card-risk" : ""}`} key={app.appId} onClick={() => onSelectApp(app)}>
+                  <div className="kanban-card-header"><span className="kanban-app-id">{app.appId}</span><RiskBadge level={app.riskLevel} /></div>
+                  <div className="kanban-card-manufacturer">{app.manufacturer}</div>
+                  <div className="kanban-card-meta">
+                    <span>{app.respiratorClass}</span>
+                    <span>{app.daysInStage}d in stage{app.daysInStage > STAGE_MEDIAN_DAYS[app.currentStage] * 1.5 && <span style={{color:"var(--danger)"}}> !</span>}</span>
+                  </div>
+                  <div className="kanban-card-footer"><span>{app.country}</span><span>{app.applicantType}</span></div>
+                </div>
+              ))}
+              {apps.length === 0 && <div className="kanban-empty">No applications</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ApplicationDetail({ app, onBack }) {
+  const medianDays = STAGE_MEDIAN_DAYS[app.currentStage];
+  const ratio = (app.daysInStage / medianDays).toFixed(2);
+  return (
+    <div>
+      <button className="btn btn-secondary" onClick={onBack} style={{marginBottom:"1rem"}}>&larr; Back to Board</button>
+      <div className="card">
+        <div className="detail-header">
+          <div><h2>{app.appId} — {app.manufacturer}</h2><p style={{color:"var(--text-muted)"}}>{app.respiratorClass} | {app.applicantType} | {app.country}</p></div>
+          <RiskBadge level={app.riskLevel} />
+        </div>
+        <div className="kpi-row" style={{marginTop:"1rem"}}>
+          <div className="kpi-card"><div className="kpi-value">{app.currentStage}</div><div className="kpi-label">Current Stage</div></div>
+          <div className="kpi-card"><div className="kpi-value" style={{color:app.daysInStage > medianDays * 1.5 ? "var(--danger)" : "var(--text)"}}>{app.daysInStage}</div><div className="kpi-label">Days in Stage (median: {medianDays})</div></div>
+          <div className="kpi-card"><div className="kpi-value">{ratio}x</div><div className="kpi-label">vs. Median Duration</div></div>
+          <div className="kpi-card"><div className="kpi-value">{app.intakeCompletenessScore}%</div><div className="kpi-label">Intake Score</div></div>
+        </div>
+      </div>
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>Stage Timeline</h3>
+        <div className="timeline">
+          {app.stageHistory.map((s, i) => (
+            <div className={`timeline-item ${!s.completedDate ? "timeline-current" : ""}`} key={i}>
+              <div className="timeline-dot" />
+              <div className="timeline-content">
+                <strong>{s.stage}</strong>
+                <div style={{color:"var(--text-muted)",fontSize:"0.85rem"}}>Entered: {s.enteredDate}{s.completedDate && ` — Completed: ${s.completedDate}`}{s.reviewer && ` | Reviewer: ${s.reviewer}`}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {app.riskFactors.length > 0 && (
+        <div className="card" style={{marginTop:"1rem"}}>
+          <h3>AI Risk Analysis</h3>
+          <div className="info-box" style={{marginBottom:"1rem"}}><strong>Human Review Notice:</strong> Risk assessments are AI-generated indicators. All escalation decisions must be made by authorized program staff.</div>
+          <h4>Risk Factors Identified</h4>
+          <ul className="risk-list">{app.riskFactors.map((f, i) => <li key={i}>{f}</li>)}</ul>
+          <h4 style={{marginTop:"1rem"}}>Recommended Actions</h4>
+          <ul className="action-list">{app.recommendedActions.map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </div>
+      )}
+      {app.deficiencies.length > 0 && (
+        <div className="card" style={{marginTop:"1rem"}}>
+          <h3>Open Deficiency Items ({app.deficiencies.length})</h3>
+          <table className="data-table">
+            <thead><tr><th>ID</th><th>Description</th><th>Status</th><th>Opened</th></tr></thead>
+            <tbody>{app.deficiencies.map(d => (
+              <tr key={d.id}><td><strong>{d.id}</strong></td><td>{d.description}</td><td><span className={`badge ${d.status === "open" ? "badge-warning" : "badge-pass"}`}>{d.status.toUpperCase()}</span></td><td>{d.openedDate}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>Assignment</h3>
+        <div className="detail-grid">
+          <div><strong>Assigned Reviewer:</strong> {app.assignedReviewer}</div>
+          <div><strong>SLA Target Date:</strong> <span style={{color:new Date(app.slaTargetDate) < new Date() ? "var(--danger)" : "var(--text)"}}>{app.slaTargetDate}{new Date(app.slaTargetDate) < new Date() && " (OVERDUE)"}</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsView() {
+  const countryData = Object.entries(APPLICATIONS.reduce((acc, a) => { acc[a.country] = (acc[a.country] || 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1]);
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem"}}>
+        <div className="card">
+          <h3>Application Throughput by Quarter</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={THROUGHPUT_DATA}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="quarter" tick={{fontSize:12}} />
+              <YAxis tick={{fontSize:12}} />
+              <Tooltip /><Legend />
+              <Line type="monotone" dataKey="approvals" stroke="#16a34a" strokeWidth={2} name="Approvals" />
+              <Line type="monotone" dataKey="denials" stroke="#dc2626" strokeWidth={2} name="Denials" />
+              <Line type="monotone" dataKey="pending" stroke="#1e40af" strokeWidth={2} name="Pending" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3>Average Total Days by Respirator Class</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={AVG_DAYS_BY_CLASS} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis type="number" tick={{fontSize:12}} />
+              <YAxis dataKey="className" type="category" tick={{fontSize:11}} width={100} />
+              <Tooltip />
+              <Bar dataKey="avgDays" fill="#1e40af" name="Avg. Days" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card">
+          <h3>Stall Rate by Applicant Type</h3>
+          <div className="kpi-row">
+            <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>38%</div><div className="kpi-label">New Applicants</div></div>
+            <div className="kpi-card"><div className="kpi-value" style={{color:"var(--success)"}}>12%</div><div className="kpi-label">Existing Holders</div></div>
+          </div>
+          <p style={{color:"var(--text-muted)",fontSize:"0.85rem",marginTop:"0.75rem"}}>New applicants are 3.2x more likely to stall during the approval process. Most stalls occur at the Engineering Review and QMS Review stages due to documentation deficiencies and site qualification challenges.</p>
+        </div>
+        <div className="card">
+          <h3>Active Applications by Country</h3>
+          <div className="country-grid">
+            {countryData.map(([country, count]) => (
+              <div className="country-item" key={country}>
+                <span className="country-name">{country}</span>
+                <div className="country-bar-container"><div className="country-bar" style={{width:`${(count / APPLICATIONS.length) * 100}%`}} /></div>
+                <span className="country-count">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LifecycleTracker() {
+  const [view, setView] = useState("kanban");
+  const [selectedApp, setSelectedApp] = useState(null);
+  const handleSelectApp = app => { setSelectedApp(app); setView("detail"); };
+  return (
+    <div>
+      <div className="module-header">
+        <h1>Module 2: Application Lifecycle Tracker</h1>
+        <p>Workflow dashboard tracking every application through the 7-stage approval process, with AI-powered stall prediction and risk assessment.</p>
+      </div>
+      <div className="tabs" style={{marginBottom:"1.5rem"}}>
+        <button className={`tab ${view === "kanban" || view === "detail" ? "tab-active" : ""}`} onClick={() => { setView("kanban"); setSelectedApp(null); }}>Portfolio Board</button>
+        <button className={`tab ${view === "analytics" ? "tab-active" : ""}`} onClick={() => setView("analytics")}>Analytics</button>
+      </div>
+      {view === "kanban" && <KanbanBoard onSelectApp={handleSelectApp} />}
+      {view === "detail" && selectedApp && <ApplicationDetail app={selectedApp} onBack={() => { setView("kanban"); setSelectedApp(null); }} />}
+      {view === "analytics" && <AnalyticsView />}
+    </div>
+  );
+}
+
+// =====================================================================
+// MODULE 5: Post-Market Surveillance Dashboard
+// =====================================================================
+function CelMatchBadge({ match }) {
+  const styles = { no_match:"badge-fail", mismatch:"badge-fail", match_suspect:"badge-warning", not_applicable:"badge-na" };
+  const labels = { no_match:"No Match", mismatch:"Mismatch", match_suspect:"Suspect", not_applicable:"N/A" };
+  return <span className={`badge ${styles[match] || "badge-na"}`}>{labels[match] || match}</span>;
+}
+
+function OverviewDashboard({ onNavigate }) {
+  const kpis = SURVEILLANCE_KPIS;
+  return (
+    <div>
+      <div className="kpi-row" style={{marginBottom:"1.5rem"}}>
+        <div className="kpi-card"><div className="kpi-value">{kpis.activeApprovalHolders}</div><div className="kpi-label">Active Approval Holders</div></div>
+        <div className="kpi-card"><div className="kpi-value">{kpis.fieldAuditsCompleted}</div><div className="kpi-label">Field Audits (12 mo.)</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>{kpis.openComplaints}</div><div className="kpi-label">Open Complaints ({kpis.highPriorityComplaints} high)</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--danger)"}}>{kpis.activeCounterfeitInvestigations}</div><div className="kpi-label">Counterfeit Investigations</div></div>
+        <div className="kpi-card"><div className="kpi-value" style={{color:"var(--warning)"}}>{kpis.overdueForSiteVisit}</div><div className="kpi-label">Overdue for Site Visit</div></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:"1rem"}}>
+        <div className="card">
+          <h3>Manufacturer Risk Heatmap</h3>
+          <p style={{color:"var(--text-muted)",fontSize:"0.85rem",marginBottom:"1rem"}}>Composite risk score based on field audit trends, complaint volume, site visit recency, and counterfeit associations.</p>
+          <div className="risk-heatmap">
+            {MANUFACTURER_RISKS.sort((a, b) => b.riskScore - a.riskScore).map(m => (
+              <div className="heatmap-cell" key={m.name} style={{
+                backgroundColor: m.riskScore >= 70 ? "rgba(220, 38, 38, 0.2)" : m.riskScore >= 40 ? "rgba(245, 158, 11, 0.2)" : m.riskScore >= 20 ? "rgba(59, 130, 246, 0.1)" : "rgba(34, 197, 94, 0.1)",
+                borderColor: m.riskScore >= 70 ? "var(--danger)" : m.riskScore >= 40 ? "var(--warning)" : "var(--border)",
+                cursor: m.name === "SafeAir Technologies" ? "pointer" : "default"
+              }} onClick={() => { if (m.name === "SafeAir Technologies") onNavigate("drift"); }}>
+                <div className="heatmap-name">{m.name}</div>
+                <div className="heatmap-score"><span style={{color: m.riskScore >= 70 ? "var(--danger)" : m.riskScore >= 40 ? "var(--warning)" : "var(--text-muted)", fontWeight:700}}>{m.riskScore}</span></div>
+                <div className="heatmap-meta">
+                  {m.auditTrend === "declining" && <span style={{color:"var(--danger)",fontSize:"0.75rem"}}>Declining</span>}
+                  {m.overdue && <span style={{color:"var(--warning)",fontSize:"0.75rem"}}>Overdue</span>}
+                  {m.openComplaints > 0 && <span style={{fontSize:"0.75rem"}}>{m.openComplaints} complaint{m.openComplaints > 1 ? "s" : ""}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <h3>Attention Required</h3>
+          <div className="attention-list">
+            <div className="attention-item attention-critical" onClick={() => onNavigate("drift")} style={{cursor:"pointer"}}>
+              <div className="attention-badge"><span className="badge badge-fail">CRITICAL</span></div>
+              <div><strong>SafeAir Technologies</strong><p>Performance drift detected + 3 correlated complaints. Filtration efficiency declining toward failure threshold.</p></div>
+            </div>
+            <div className="attention-item attention-high" onClick={() => onNavigate("counterfeit")} style={{cursor:"pointer"}}>
+              <div className="attention-badge"><span className="badge badge-fail">HIGH</span></div>
+              <div><strong>Counterfeit N95s Detected</strong><p>OSHA referral: workers using respirators with no NIOSH markings. Samples requested for testing.</p></div>
+            </div>
+            <div className="attention-item attention-medium" onClick={() => onNavigate("complaints")} style={{cursor:"pointer"}}>
+              <div className="attention-badge"><span className="badge badge-warning">MEDIUM</span></div>
+              <div><strong>GlobalShield PPE</strong><p>Distributor reports packaging anomaly. Possible counterfeit or unauthorized packaging change.</p></div>
+            </div>
+          </div>
+          <div className="info-box" style={{marginTop:"1rem",fontSize:"0.85rem"}}><strong>YTD Stat:</strong> {kpis.fraudulentListingsInvestigatedYTD.toLocaleString()} potentially fraudulent respirator listings investigated</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DriftDetail({ onBack }) {
+  const safeAirAudits = FIELD_AUDIT_RESULTS.filter(a => a.manufacturer === "SafeAir Technologies");
+  const safeAirComplaints = COMPLAINTS.filter(c => c.manufacturer === "SafeAir Technologies");
+  return (
+    <div>
+      <button className="btn btn-secondary" onClick={onBack} style={{marginBottom:"1rem"}}>&larr; Back to Overview</button>
+      <div className="card">
+        <div className="detail-header">
+          <div><h2>SafeAir Technologies — Performance Drift Analysis</h2><p style={{color:"var(--text-muted)"}}>TC 84A-5678 | N95 FFR Model SA-Pro</p></div>
+          <span className="badge badge-fail">CRITICAL</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"1rem",marginTop:"1.5rem"}}>
+          {AUDIT_TRENDS.map(trend => {
+            const lastVal = trend.dataPoints[trend.dataPoints.length - 1].value;
+            const exceeds = trend.thresholdDirection === "max" ? lastVal > trend.threshold : lastVal < trend.threshold;
+            const lineColor = exceeds ? "#dc2626" : "#1e40af";
+            return (
+              <div key={trend.testType} style={{border:"1px solid var(--border)",borderRadius:"8px",padding:"1rem"}}>
+                <h4 style={{fontSize:"0.9rem",marginBottom:"0.5rem"}}>{trend.testType}</h4>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={trend.dataPoints}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="quarter" tick={{fontSize:10}} />
+                    <YAxis tick={{fontSize:10}} domain={trend.thresholdDirection === "min" ? [dataMin => Math.min(dataMin, trend.threshold) - 1, "auto"] : ["auto", dataMax => Math.max(dataMax, trend.threshold) + 2]} />
+                    <Tooltip />
+                    <ReferenceLine y={trend.threshold} stroke="#dc2626" strokeDasharray="5 5" label={{value:`${trend.thresholdDirection === "min" ? "Min" : "Max"}: ${trend.threshold}${trend.unit}`,position:"right",fontSize:10,fill:"#dc2626"}} />
+                    <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2} dot={{r:4}} />
+                  </LineChart>
+                </ResponsiveContainer>
+                <div style={{textAlign:"center",fontSize:"0.8rem",color:"var(--text-muted)"}}>Threshold: {trend.thresholdDirection === "min" ? ">=" : "<="} {trend.threshold}{trend.unit}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>Latest Field Audit Results</h3>
+        <table className="data-table">
+          <thead><tr><th>Audit ID</th><th>Test</th><th>Benchmark</th><th>Latest</th><th>Drift</th><th>Threshold</th><th>Status</th></tr></thead>
+          <tbody>{safeAirAudits.map(a => (
+            <tr key={a.auditId} className={a.status === "warning" ? "row-fail" : ""}>
+              <td>{a.auditId}</td><td>{a.testType}</td><td>{a.originalBenchmark}{a.unit}</td><td>{a.latestResult}{a.unit}</td>
+              <td style={{color:a.status === "warning" ? "var(--danger)" : "inherit",fontWeight:a.status === "warning" ? 700 : 400}}>{a.drift > 0 ? "+" : ""}{a.drift}{a.unit}</td>
+              <td>{a.thresholdDirection === "min" ? ">=" : "<="} {a.threshold}{a.unit}</td>
+              <td><span className={`badge ${a.status === "warning" ? "badge-warning" : "badge-pass"}`}>{a.status.toUpperCase()}</span></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>Correlated Complaints ({safeAirComplaints.length})</h3>
+        {safeAirComplaints.map(c => (
+          <div className="complaint-card" key={c.complaintId}>
+            <div className="complaint-header">
+              <span><strong>{c.complaintId}</strong> — {c.date}</span>
+              <span className={`badge ${c.aiSeverity === "High" ? "badge-fail" : "badge-warning"}`}>{c.aiSeverity} (P{c.aiPriority})</span>
+            </div>
+            <p className="complaint-desc">"{c.description}"</p>
+            <p className="complaint-source">Source: {c.source} | Product: {c.product}</p>
+            {c.correlatedAuditIds.length > 0 && <p className="complaint-correlation">Correlated with: {c.correlatedAuditIds.join(", ")}</p>}
+          </div>
+        ))}
+      </div>
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>AI Recommendation</h3>
+        <div className="info-box" style={{marginBottom:"1rem"}}><strong>Human Review Notice:</strong> This recommendation is AI-generated. Initiation of NRI and enforcement actions requires authorization by program management.</div>
+        <div className="guidance-card" style={{borderColor:"var(--danger)"}}>
+          <div className="guidance-body">
+            <p><strong>Initiate Nonconformance Response Investigation (NRI) per CA 2023-1062.</strong> Performance metrics for SafeAir Technologies SA-Pro N95 (TC 84A-5678) are trending toward failure thresholds across all three test parameters:</p>
+            <ul style={{margin:"0.75rem 0"}}>
+              <li>NaCl Filtration Efficiency: 96.2% (down from 99.1%, threshold &ge; 95%)</li>
+              <li>Inhalation Resistance: 38 mmH&#8322;O (up from 30, threshold &le; 35 — <strong>EXCEEDS LIMIT</strong>)</li>
+              <li>Exhalation Resistance: 26 mmH&#8322;O (up from 21, threshold &le; 25 — <strong>EXCEEDS LIMIT</strong>)</li>
+            </ul>
+            <p>A correlated complaint cluster (3 complaints in 5 days) suggests a systemic manufacturing issue. Recommend requesting product samples from current production lots for independent lab testing and notifying the manufacturer of the pending NRI.</p>
+          </div>
+        </div>
+        <div style={{marginTop:"1rem",display:"flex",gap:"0.75rem",justifyContent:"flex-end"}}>
+          <button className="btn btn-primary">Initiate NRI</button>
+          <button className="btn btn-secondary">Request Samples</button>
+          <button className="btn btn-secondary">Schedule Site Visit</button>
+          <button className="btn btn-secondary">Contact Manufacturer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComplaintQueue({ onBack }) {
+  const [expanded, setExpanded] = useState(null);
+  return (
+    <div>
+      <button className="btn btn-secondary" onClick={onBack} style={{marginBottom:"1rem"}}>&larr; Back to Overview</button>
+      <div className="card">
+        <h2>Complaint Triage Queue</h2>
+        <p style={{color:"var(--text-muted)",marginBottom:"1rem"}}>AI-prioritized complaints sorted by severity, correlation with field audit data, and pattern detection.</p>
+        <table className="data-table">
+          <thead><tr><th>ID</th><th>Date</th><th>Source</th><th>Manufacturer</th><th>Product</th><th>Severity</th><th>Priority</th><th></th></tr></thead>
+          <tbody>
+            {COMPLAINTS.sort((a, b) => a.aiPriority - b.aiPriority).map(c => (
+              <React.Fragment key={c.complaintId}>
+                <tr className={c.aiSeverity === "High" ? "row-fail" : ""} style={{cursor:"pointer"}} onClick={() => setExpanded(expanded === c.complaintId ? null : c.complaintId)}>
+                  <td><strong>{c.complaintId}</strong></td><td>{c.date}</td><td>{c.source}</td><td>{c.manufacturer}</td><td>{c.product}</td>
+                  <td><span className={`badge ${c.aiSeverity === "High" ? "badge-fail" : c.aiSeverity === "Medium" ? "badge-warning" : "badge-pass"}`}>{c.aiSeverity}</span></td>
+                  <td>P{c.aiPriority}</td><td>{expanded === c.complaintId ? "\u25B2" : "\u25BC"}</td>
+                </tr>
+                {expanded === c.complaintId && (
+                  <tr><td colSpan={8} style={{padding:"1rem",backgroundColor:"var(--surface)"}}>
+                    <div style={{marginBottom:"0.75rem"}}><strong>Complaint:</strong> "{c.description}"</div>
+                    <div style={{marginBottom:"0.75rem"}}><strong>AI Analysis:</strong> {c.aiRationale}</div>
+                    <div style={{marginBottom:"0.75rem"}}><strong>Recommendation:</strong> {c.aiRecommendation}</div>
+                    {c.correlatedAuditIds.length > 0 && <div><strong>Correlated Audits:</strong> {c.correlatedAuditIds.join(", ")}</div>}
+                  </td></tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CounterfeitMonitoring({ onBack }) {
+  return (
+    <div>
+      <button className="btn btn-secondary" onClick={onBack} style={{marginBottom:"1rem"}}>&larr; Back to Overview</button>
+      <div className="card">
+        <div className="detail-header">
+          <div><h2>Counterfeit & Fraud Monitoring</h2><p style={{color:"var(--text-muted)"}}>Marketplace scanning, CEL cross-reference, and investigation tracking</p></div>
+          <div style={{textAlign:"right"}}><div className="kpi-value">{SURVEILLANCE_KPIS.fraudulentListingsInvestigatedYTD.toLocaleString()}</div><div style={{fontSize:"0.8rem",color:"var(--text-muted)"}}>Fraudulent listings investigated YTD</div></div>
+        </div>
+        <table className="data-table" style={{marginTop:"1.5rem"}}>
+          <thead><tr><th>Alert ID</th><th>Date</th><th>Source</th><th>Product</th><th>Claimed TC#</th><th>CEL Match</th><th>Status</th></tr></thead>
+          <tbody>{COUNTERFEIT_ALERTS.map(a => (
+            <tr key={a.alertId}>
+              <td><strong>{a.alertId}</strong></td><td>{a.date}</td><td>{a.source}</td><td>{a.product}</td>
+              <td style={{fontFamily:"monospace"}}>{a.claimedTcNumber}</td><td><CelMatchBadge match={a.celMatch} /></td>
+              <td><span className={`badge ${a.status.includes("CPIP") ? "badge-fail" : a.status.includes("Referral") ? "badge-fail" : "badge-warning"}`}>{a.status}</span></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      {COUNTERFEIT_ALERTS.map(a => (
+        <div className="card" key={a.alertId} style={{marginTop:"1rem"}}>
+          <h3>{a.alertId} — {a.product}</h3>
+          <div className="detail-grid" style={{marginBottom:"0.75rem"}}>
+            <div><strong>Source:</strong> {a.source}</div><div><strong>Date:</strong> {a.date}</div>
+            <div><strong>Claimed TC#:</strong> <code>{a.claimedTcNumber}</code></div><div><strong>CEL Result:</strong> <CelMatchBadge match={a.celMatch} /></div>
+          </div>
+          <div className="info-box" style={{borderColor:a.celMatch === "no_match" || a.celMatch === "mismatch" ? "var(--danger)" : "var(--warning)",backgroundColor:a.celMatch === "no_match" || a.celMatch === "mismatch" ? "rgba(220, 38, 38, 0.05)" : "rgba(245, 158, 11, 0.05)"}}>
+            <strong>Issue:</strong> {a.issue}
+          </div>
+        </div>
+      ))}
+      <div className="card" style={{marginTop:"1rem"}}>
+        <h3>CPIP Auto-Trigger Thresholds</h3>
+        <p style={{color:"var(--text-muted)",fontSize:"0.85rem",marginBottom:"1rem"}}>Configurable rules for automated Certified Product Investigation Process (CPIP) initiation.</p>
+        <table className="data-table">
+          <thead><tr><th>Rule</th><th>Threshold</th><th>Mode</th></tr></thead>
+          <tbody>
+            <tr><td>Filtration efficiency drift</td><td>&gt; 2% decline from benchmark</td><td><span className="badge badge-warning">Recommend & Confirm</span></td></tr>
+            <tr><td>Resistance exceeds regulatory limit</td><td>Inhalation &gt; 35 mmH&#8322;O or Exhalation &gt; 25 mmH&#8322;O</td><td><span className="badge badge-fail">Auto-Initiate</span></td></tr>
+            <tr><td>Correlated complaint cluster</td><td>3+ complaints on same product within 60 days</td><td><span className="badge badge-warning">Recommend & Confirm</span></td></tr>
+            <tr><td>CEL mismatch on counterfeit alert</td><td>Any confirmed No Match or Mismatch</td><td><span className="badge badge-fail">Auto-Initiate</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function SurveillanceDashboard() {
+  const [view, setView] = useState("overview");
+  return (
+    <div>
+      <div className="module-header">
+        <h1>Module 5: Post-Market Surveillance Dashboard</h1>
+        <p>Unified surveillance dashboard aggregating field audits, complaints, and counterfeit intelligence with AI-assisted triage and trend detection.</p>
+      </div>
+      {view === "overview" && <OverviewDashboard onNavigate={v => setView(v)} />}
+      {view === "drift" && <DriftDetail onBack={() => setView("overview")} />}
+      {view === "complaints" && <ComplaintQueue onBack={() => setView("overview")} />}
+      {view === "counterfeit" && <CounterfeitMonitoring onBack={() => setView("overview")} />}
+    </div>
+  );
+}
+
+// =====================================================================
+// APP SHELL
+// =====================================================================
+function App() {
+  const [activeModule, setActiveModule] = useState("module1");
+  return (
+    <div className="app">
+      <header className="app-header">
+        <div className="app-brand">
+          <div className="app-logo">NIOSH</div>
+          <div className="app-title">
+            <span className="title-main">Respirator Approval Program</span>
+            <span className="title-sub">AI-Assisted Application Management Platform</span>
+          </div>
+        </div>
+        <nav className="app-nav">
+          <button className={`nav-btn ${activeModule === "module1" ? "nav-active" : ""}`} onClick={() => setActiveModule("module1")}>
+            <span className="nav-number">1</span>Intelligent Intake
+          </button>
+          <button className={`nav-btn ${activeModule === "module2" ? "nav-active" : ""}`} onClick={() => setActiveModule("module2")}>
+            <span className="nav-number">2</span>Lifecycle Tracker
+          </button>
+          <button className={`nav-btn ${activeModule === "module5" ? "nav-active" : ""}`} onClick={() => setActiveModule("module5")}>
+            <span className="nav-number">5</span>Post-Market Surveillance
+          </button>
+        </nav>
+        <div className="app-user">Demo Mode</div>
+      </header>
+      <main className="app-main">
+        {activeModule === "module1" && <IntakePreScreening />}
+        {activeModule === "module2" && <LifecycleTracker />}
+        {activeModule === "module5" && <SurveillanceDashboard />}
+      </main>
+      <footer className="app-footer">
+        <span>NIOSH RAP AI-Assisted Platform — Demonstration Prototype</span>
+        <span>All AI outputs are recommendations for human review. Final decisions require authorized program staff.</span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
