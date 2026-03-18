@@ -5,13 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NIOSH RAP — AI-Assisted Application Management Platform</title>
 
-<!-- React 18 + ReactDOM -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<!-- Recharts (UMD) -->
-<script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<!-- React 18.2.0 (development for better errors) -->
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+<!-- Recharts 2.5.0 UMD (known-good version with UMD build) -->
+<script crossorigin src="https://cdn.jsdelivr.net/npm/recharts@2.5.0/umd/Recharts.js"></script>
 <!-- Babel standalone for JSX -->
-<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.9/babel.min.js"></script>
+<!-- Verify libraries loaded -->
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    var missing = [];
+    if (typeof React === 'undefined') missing.push('React');
+    if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
+    if (typeof Recharts === 'undefined') missing.push('Recharts');
+    if (typeof Babel === 'undefined') missing.push('Babel');
+    if (missing.length > 0) {
+      document.getElementById('root').innerHTML =
+        '<div style="padding:2rem;color:red;font-family:sans-serif;">' +
+        '<h2>Failed to load libraries</h2>' +
+        '<p>Could not load: ' + missing.join(', ') + '</p>' +
+        '<p>Please check your internet connection and try again.</p></div>';
+    }
+  });
+</script>
 
 <style>
 /* ===== CSS Variables & Reset ===== */
@@ -766,7 +783,7 @@ function OverviewDashboard({ onNavigate }) {
           <h3>Manufacturer Risk Heatmap</h3>
           <p style={{color:"var(--text-muted)",fontSize:"0.85rem",marginBottom:"1rem"}}>Composite risk score based on field audit trends, complaint volume, site visit recency, and counterfeit associations.</p>
           <div className="risk-heatmap">
-            {MANUFACTURER_RISKS.sort((a, b) => b.riskScore - a.riskScore).map(m => (
+            {[...MANUFACTURER_RISKS].sort((a, b) => b.riskScore - a.riskScore).map(m => (
               <div className="heatmap-cell" key={m.name} style={{
                 backgroundColor: m.riskScore >= 70 ? "rgba(220, 38, 38, 0.2)" : m.riskScore >= 40 ? "rgba(245, 158, 11, 0.2)" : m.riskScore >= 20 ? "rgba(59, 130, 246, 0.1)" : "rgba(34, 197, 94, 0.1)",
                 borderColor: m.riskScore >= 70 ? "var(--danger)" : m.riskScore >= 40 ? "var(--warning)" : "var(--border)",
@@ -829,7 +846,7 @@ function DriftDetail({ onBack }) {
                   <LineChart data={trend.dataPoints}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="quarter" tick={{fontSize:10}} />
-                    <YAxis tick={{fontSize:10}} domain={trend.thresholdDirection === "min" ? [dataMin => Math.min(dataMin, trend.threshold) - 1, "auto"] : ["auto", dataMax => Math.max(dataMax, trend.threshold) + 2]} />
+                    <YAxis tick={{fontSize:10}} domain={trend.thresholdDirection === "min" ? [Math.floor(Math.min(...trend.dataPoints.map(d=>d.value), trend.threshold)) - 1, "auto"] : ["auto", Math.ceil(Math.max(...trend.dataPoints.map(d=>d.value), trend.threshold)) + 2]} />
                     <Tooltip />
                     <ReferenceLine y={trend.threshold} stroke="#dc2626" strokeDasharray="5 5" label={{value:`${trend.thresholdDirection === "min" ? "Min" : "Max"}: ${trend.threshold}${trend.unit}`,position:"right",fontSize:10,fill:"#dc2626"}} />
                     <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2} dot={{r:4}} />
@@ -905,7 +922,7 @@ function ComplaintQueue({ onBack }) {
         <table className="data-table">
           <thead><tr><th>ID</th><th>Date</th><th>Source</th><th>Manufacturer</th><th>Product</th><th>Severity</th><th>Priority</th><th></th></tr></thead>
           <tbody>
-            {COMPLAINTS.sort((a, b) => a.aiPriority - b.aiPriority).map(c => (
+            {[...COMPLAINTS].sort((a, b) => a.aiPriority - b.aiPriority).map(c => (
               <React.Fragment key={c.complaintId}>
                 <tr className={c.aiSeverity === "High" ? "row-fail" : ""} style={{cursor:"pointer"}} onClick={() => setExpanded(expanded === c.complaintId ? null : c.complaintId)}>
                   <td><strong>{c.complaintId}</strong></td><td>{c.date}</td><td>{c.source}</td><td>{c.manufacturer}</td><td>{c.product}</td>
