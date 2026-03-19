@@ -48,11 +48,21 @@ function App() {
         <div className="app-user">Demo Mode</div>
       </header>
 
+      {/* AI Disclaimer */}
+      <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", padding: "1rem 1.5rem 0" }}>
+        <div className="ai-disclaimer">
+          <span className="ai-disclaimer-icon">AI</span>
+          <span>All AI outputs are recommendations for human review. Final decisions require authorized program staff approval.</span>
+        </div>
+      </div>
+
       {/* Main content */}
       <main className="app-main">
-        {activeModule === "module1" && <IntakePreScreening />}
-        {activeModule === "module2" && <LifecycleTracker />}
-        {activeModule === "module5" && <SurveillanceDashboard />}
+        <div className="view-fade-in" key={activeModule}>
+          {activeModule === "module1" && <IntakePreScreening />}
+          {activeModule === "module2" && <LifecycleTracker />}
+          {activeModule === "module5" && <SurveillanceDashboard />}
+        </div>
       </main>
 
       {/* Footer */}

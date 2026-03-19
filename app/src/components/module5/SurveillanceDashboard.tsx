@@ -106,18 +106,20 @@ function OverviewDashboard({ onNavigate }: { onNavigate: (v: View) => void }) {
         </div>
       </div>
 
-      {/* Quick nav buttons for new views */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        <button className="btn btn-secondary" onClick={() => onNavigate("drift")}>N95 Performance Drift</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("sar_drift")}>SAR Air Quality Drift</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("ltfe")}>SCSR Field Evaluation (LTFE)</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("nri")}>NRI Tracker</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("msha")}>MSHA Coordination</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("complaints")}>Complaint Queue</button>
-        <button className="btn btn-secondary" onClick={() => onNavigate("counterfeit")}>Counterfeit Monitoring</button>
+      {/* Quick nav pills */}
+      <div className="quick-nav">
+        <button className="quick-nav-btn" onClick={() => onNavigate("drift")}>N95 Drift</button>
+        <button className="quick-nav-btn" onClick={() => onNavigate("sar_drift")}>SAR Air Quality</button>
+        <div className="quick-nav-divider" />
+        <button className="quick-nav-btn" onClick={() => onNavigate("ltfe")}>SCSR Field Eval (LTFE)</button>
+        <button className="quick-nav-btn" onClick={() => onNavigate("nri")}>NRI Tracker</button>
+        <button className="quick-nav-btn" onClick={() => onNavigate("msha")}>MSHA Coordination</button>
+        <div className="quick-nav-divider" />
+        <button className="quick-nav-btn" onClick={() => onNavigate("complaints")}>Complaint Queue</button>
+        <button className="quick-nav-btn" onClick={() => onNavigate("counterfeit")}>Counterfeit Monitoring</button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem" }}>
+      <div className="grid-overview" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem" }}>
         {/* Risk Heatmap */}
         <div className="card">
           <h3>Manufacturer Risk Heatmap</h3>
@@ -322,6 +324,7 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
 
         {/* Trend charts */}
         <div
+          className="grid-3col"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 1fr",
@@ -400,7 +403,7 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
       {/* Current audit results */}
       <div className="card" style={{ marginTop: "1rem" }}>
         <h3>Latest Field Audit Results</h3>
-        <table className="data-table">
+        <div className="table-scroll"><table className="data-table">
           <thead>
             <tr>
               <th>Audit ID</th>
@@ -451,7 +454,7 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Correlated complaints */}
@@ -562,7 +565,7 @@ function ComplaintQueue({ onBack }: { onBack: () => void }) {
           audit data, and pattern detection.
         </p>
 
-        <table className="data-table">
+        <div className="table-scroll"><table className="data-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -637,7 +640,7 @@ function ComplaintQueue({ onBack }: { onBack: () => void }) {
               )
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -673,7 +676,7 @@ function CounterfeitMonitoring({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <table className="data-table" style={{ marginTop: "1.5rem" }}>
+        <div className="table-scroll" style={{ marginTop: "1.5rem" }}><table className="data-table">
           <thead>
             <tr>
               <th>Alert ID</th>
@@ -714,7 +717,7 @@ function CounterfeitMonitoring({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Detail cards for each alert */}
@@ -763,7 +766,7 @@ function CounterfeitMonitoring({ onBack }: { onBack: () => void }) {
           Configurable rules for automated Certified Product Investigation
           Process (CPIP) initiation.
         </p>
-        <table className="data-table">
+        <div className="table-scroll"><table className="data-table">
           <thead>
             <tr>
               <th>Rule</th>
@@ -807,7 +810,7 @@ function CounterfeitMonitoring({ onBack }: { onBack: () => void }) {
               </td>
             </tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -836,7 +839,7 @@ function SarDriftDetail({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Trend charts */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
+        <div className="grid-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
           {SAR_AUDIT_TRENDS.map((trend) => (
             <div key={trend.testType} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
               <h4 style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{trend.testType}</h4>
@@ -878,7 +881,7 @@ function SarDriftDetail({ onBack }: { onBack: () => void }) {
       {/* Field audit results */}
       <div className="card" style={{ marginTop: "1rem" }}>
         <h3>Latest Field Audit Results</h3>
-        <table className="data-table">
+        <div className="table-scroll"><table className="data-table">
           <thead>
             <tr><th>Audit ID</th><th>Test</th><th>Benchmark</th><th>Latest</th><th>Drift</th><th>Threshold</th><th>Status</th></tr>
           </thead>
@@ -897,7 +900,7 @@ function SarDriftDetail({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Correlated complaints */}
@@ -976,7 +979,7 @@ function LtfeResults({ onBack }: { onBack: () => void }) {
           <strong>LTFE Protocol:</strong> Random sampling with 98% detection probability at 1.5% error rate. Tests include: (1) Visual inspection per manufacturer procedure, (2) Quantitative Leak Testing (QLT) at 300 mmH₂O vacuum, (3) Breathing Machine Simulator (BMS) testing for rated service life.
         </div>
 
-        <table className="data-table" style={{ marginTop: "1.5rem" }}>
+        <div className="table-scroll" style={{ marginTop: "1.5rem" }}><table className="data-table">
           <thead>
             <tr>
               <th>Eval ID</th>
@@ -1013,7 +1016,7 @@ function LtfeResults({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Expanded detail for selected eval */}
@@ -1031,7 +1034,7 @@ function LtfeResults({ onBack }: { onBack: () => void }) {
               <div><strong>Sample Size:</strong> {r.sampleSize} units</div>
               <div><strong>Eval Date:</strong> {r.evalDate}</div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+            <div className="grid-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div style={{ textAlign: "center", padding: "1rem", border: "1px solid var(--border)", borderRadius: "8px" }}>
                 <div style={{ fontSize: "1.5rem", fontWeight: 700, color: passColor(r.visualPassRate) }}>{r.visualPassRate}%</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Visual Inspection</div>
@@ -1064,7 +1067,7 @@ function LtfeResults({ onBack }: { onBack: () => void }) {
         <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "1rem" }}>
           Phase-over-phase pass rates showing consistent decline. Historical precedent: CSE SR-100 oxygen starter assembly failures led to NIOSH/MSHA approval rescission (2009-2013).
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+        <div className="grid-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
           {LTFE_TRENDS.map((trend) => (
             <div key={trend.metric} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
               <h4 style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>{trend.metric}</h4>
@@ -1130,7 +1133,7 @@ function NriTracker({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <table className="data-table" style={{ marginTop: "1.5rem" }}>
+        <div className="table-scroll" style={{ marginTop: "1.5rem" }}><table className="data-table">
           <thead>
             <tr>
               <th>NRI ID</th>
@@ -1167,7 +1170,7 @@ function NriTracker({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Timeline detail for selected NRI */}
@@ -1204,12 +1207,10 @@ function NriTracker({ onBack }: { onBack: () => void }) {
                       <div style={{ position: "absolute", left: "-1.25rem", top: "1.25rem", bottom: 0, width: "2px", backgroundColor: step.status === "completed" ? "var(--success)" : "var(--border)" }} />
                     )}
                     {/* Dot */}
-                    <div style={{
-                      position: "absolute", left: "-1.65rem", top: "0.2rem", width: "12px", height: "12px", borderRadius: "50%",
-                      backgroundColor: step.status === "completed" ? "var(--success)" : step.status === "current" ? "var(--warning)" : "var(--border)",
-                      border: step.status === "current" ? "2px solid var(--warning)" : "none",
-                      boxShadow: step.status === "current" ? "0 0 6px var(--warning)" : "none",
-                    }} />
+                    <div
+                      className={`nri-timeline-dot nri-timeline-dot-${step.status}`}
+                      style={{ position: "absolute", left: "-1.85rem", top: "0.15rem" }}
+                    />
                     <div style={{ opacity: step.status === "pending" ? 0.5 : 1 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <strong style={{ fontSize: "0.9rem" }}>{step.event}</strong>
@@ -1267,7 +1268,7 @@ function MshaCoordinationPanel({ onBack }: { onBack: () => void }) {
           </div>
         </div>
 
-        <table className="data-table" style={{ marginTop: "1.5rem" }}>
+        <div className="table-scroll" style={{ marginTop: "1.5rem" }}><table className="data-table">
           <thead>
             <tr>
               <th>Referral ID</th>
@@ -1294,7 +1295,7 @@ function MshaCoordinationPanel({ onBack }: { onBack: () => void }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Detail cards */}
@@ -1329,7 +1330,7 @@ function MshaCoordinationPanel({ onBack }: { onBack: () => void }) {
         <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "1rem" }}>
           Every underground coal miner must have access to a NIOSH/MSHA-approved SCSR. Mine operators must maintain caches at designated locations.
         </p>
-        <table className="data-table">
+        <div className="table-scroll"><table className="data-table">
           <thead>
             <tr><th>Requirement</th><th>Status</th><th>Notes</th></tr>
           </thead>
@@ -1355,7 +1356,7 @@ function MshaCoordinationPanel({ onBack }: { onBack: () => void }) {
               <td>Joint determination pending for SR-100 units &gt; 36 months in high-humidity sites</td>
             </tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -1375,30 +1376,32 @@ export default function SurveillanceDashboard() {
         </p>
       </div>
 
-      {view === "overview" && (
-        <OverviewDashboard onNavigate={(v) => setView(v)} />
-      )}
-      {view === "drift" && (
-        <DriftDetail onBack={() => setView("overview")} />
-      )}
-      {view === "sar_drift" && (
-        <SarDriftDetail onBack={() => setView("overview")} />
-      )}
-      {view === "complaints" && (
-        <ComplaintQueue onBack={() => setView("overview")} />
-      )}
-      {view === "counterfeit" && (
-        <CounterfeitMonitoring onBack={() => setView("overview")} />
-      )}
-      {view === "ltfe" && (
-        <LtfeResults onBack={() => setView("overview")} />
-      )}
-      {view === "nri" && (
-        <NriTracker onBack={() => setView("overview")} />
-      )}
-      {view === "msha" && (
-        <MshaCoordinationPanel onBack={() => setView("overview")} />
-      )}
+      <div className="view-fade-in" key={view}>
+        {view === "overview" && (
+          <OverviewDashboard onNavigate={(v) => setView(v)} />
+        )}
+        {view === "drift" && (
+          <DriftDetail onBack={() => setView("overview")} />
+        )}
+        {view === "sar_drift" && (
+          <SarDriftDetail onBack={() => setView("overview")} />
+        )}
+        {view === "complaints" && (
+          <ComplaintQueue onBack={() => setView("overview")} />
+        )}
+        {view === "counterfeit" && (
+          <CounterfeitMonitoring onBack={() => setView("overview")} />
+        )}
+        {view === "ltfe" && (
+          <LtfeResults onBack={() => setView("overview")} />
+        )}
+        {view === "nri" && (
+          <NriTracker onBack={() => setView("overview")} />
+        )}
+        {view === "msha" && (
+          <MshaCoordinationPanel onBack={() => setView("overview")} />
+        )}
+      </div>
     </div>
   );
 }
