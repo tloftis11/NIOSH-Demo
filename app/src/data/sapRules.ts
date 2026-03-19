@@ -5,6 +5,7 @@ export interface SAPChecklistItem {
   cfrReference: string;
   severity: "critical" | "major" | "minor";
   description: string;
+  reviewType: "automated" | "manual";
 }
 
 export interface SAPChecklist {
@@ -26,6 +27,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "critical",
       description:
         "Standard Application Form must be fully completed with all required fields including applicant name, address, respirator class, and model designation.",
+      reviewType: "automated",
     },
     {
       id: 2,
@@ -36,6 +38,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "critical",
       description:
         "A $200 check payable to NIOSH must be included. The check must be dated within 30 days of submission and must have the AAR number written on it.",
+      reviewType: "manual",
     },
     {
       id: 3,
@@ -45,6 +48,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "A complete assembly matrix listing every hardware configuration covered by the application, including all variants and sizes.",
+      reviewType: "manual",
     },
     {
       id: 4,
@@ -54,6 +58,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "Exploded-view engineering drawings showing all components and subassemblies. Must follow the Drawing Checklist in SAP Section 6.2, including nose clip, filter media, headband, and valve components.",
+      reviewType: "automated",
     },
     {
       id: 5,
@@ -63,6 +68,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "Documentation for all major subassemblies including supplier information, material specifications, and part numbers for each component.",
+      reviewType: "automated",
     },
     {
       id: 6,
@@ -72,6 +78,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "Final packaging design and label copy showing all required NIOSH markings, model number, lot numbering scheme, and regulatory statements.",
+      reviewType: "automated",
     },
     {
       id: 7,
@@ -81,6 +88,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "Complete user instructions covering donning/doffing, fit check procedures, use limitations, maintenance, and storage requirements.",
+      reviewType: "automated",
     },
     {
       id: 8,
@@ -90,6 +98,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "critical",
       description:
         "Quality plan must include inspection procedures, classification of defects (critical, major, minor), sampling plans with AQL levels, and sampling levels per 42 CFR 84.41.",
+      reviewType: "automated",
     },
     {
       id: 9,
@@ -99,6 +108,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "critical",
       description:
         "Complete QA Manual covering the manufacturing facility's quality management system, including supplier/subcontractor agreements per CA 2021-1034R1.",
+      reviewType: "automated",
     },
     {
       id: 10,
@@ -108,6 +118,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "critical",
       description:
         "Physical test samples of the respirator produced under the complete proposed quality management system. Prototypes are not accepted.",
+      reviewType: "manual",
     },
     {
       id: 11,
@@ -117,6 +128,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "All documentation must be submitted on CD-R or DVD-R media. USB thumb drives, rewritable CDs, and other formats are not accepted.",
+      reviewType: "manual",
     },
     {
       id: 12,
@@ -126,6 +138,7 @@ export const FFR_SAP_CHECKLIST: SAPChecklist = {
       severity: "major",
       description:
         "Required only for private label applications. Must identify the private label holder and demonstrate authorization from the approval holder.",
+      reviewType: "automated",
     },
   ],
 };
@@ -136,6 +149,8 @@ export interface SubmittedDocument {
   compliant: boolean;
   notes: string;
   deficiencyDetail?: string;
+  manualReviewStatus?: "pending" | "verified" | "flagged";
+  reviewerNotes?: string;
 }
 
 export interface ApplicationPackage {
@@ -171,6 +186,7 @@ export const SAMPLE_APPLICATION: ApplicationPackage = {
       notes: "Check present but dated 2026-01-29 (45 days before submission).",
       deficiencyDetail:
         "The application fee check is dated January 29, 2026 — 45 days before the submission date of March 15, 2026. Per SAP Section 3.2, the check must be dated within 30 days of submission. The check has expired and a new check must be submitted.",
+      manualReviewStatus: "pending",
     },
     {
       checklistItemId: 3,
@@ -178,6 +194,7 @@ export const SAMPLE_APPLICATION: ApplicationPackage = {
       compliant: true,
       notes:
         "Assembly matrix provided. Lists 3 size variants (S, M, L) with consistent hardware.",
+      manualReviewStatus: "pending",
     },
     {
       checklistItemId: 4,
@@ -235,6 +252,7 @@ export const SAMPLE_APPLICATION: ApplicationPackage = {
       compliant: true,
       notes:
         "Test samples received. 20 units from production run under documented QMS.",
+      manualReviewStatus: "pending",
     },
     {
       checklistItemId: 11,
@@ -243,6 +261,7 @@ export const SAMPLE_APPLICATION: ApplicationPackage = {
       notes: "Documentation submitted on USB thumb drive instead of CD-R/DVD-R.",
       deficiencyDetail:
         "Application materials were submitted on a USB thumb drive. Per SAP Section 3.3, all documentation must be provided on CD-R or DVD-R media. USB thumb drives, rewritable CDs (CD-RW), and other electronic media formats are not accepted. Please resubmit all documentation on a CD-R or DVD-R.",
+      manualReviewStatus: "pending",
     },
     {
       checklistItemId: 12,
