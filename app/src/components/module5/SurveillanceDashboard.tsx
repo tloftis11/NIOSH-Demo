@@ -291,42 +291,6 @@ function OverviewDashboard({ onNavigate }: { onNavigate: (v: View) => void }) {
   );
 }
 
-// Compute predictive trajectory: extrapolate 2 quarters ahead using linear regression
-interface PredictiveDataPoint { quarter: string; value: number | undefined; projected: number | undefined }
-function computePredictiveData(dataPoints: { quarter: string; value: number }[], threshold: number, thresholdDirection: "max" | "min") {
-  const n = dataPoints.length;
-  if (n < 2) return { chartData: dataPoints.map(d => ({ ...d, projected: undefined as number | undefined })) as PredictiveDataPoint[], projectedFailureQuarter: null as string | null };
-  const slope = (dataPoints[n - 1].value - dataPoints[0].value) / (n - 1);
-  const lastVal = dataPoints[n - 1].value;
-  const proj1: PredictiveDataPoint = { quarter: "Q2 2026", value: undefined, projected: Math.round((lastVal + slope) * 10) / 10 };
-  const proj2: PredictiveDataPoint = { quarter: "Q3 2026", value: undefined, projected: Math.round((lastVal + slope * 2) * 10) / 10 };
-  const chartData: PredictiveDataPoint[] = [
-    ...dataPoints.map((d) => ({ ...d, projected: undefined as number | undefined })),
-    // bridge point: last actual value duplicated as projected start
-    { quarter: dataPoints[n - 1].quarter, value: undefined, projected: lastVal },
-    proj1,
-    proj2,
-  ];
-  // Estimate when threshold is crossed
-  let projectedFailureQuarter: string | null = null;
-  if (thresholdDirection === "max" && slope > 0) {
-    const quartersToFail = (threshold - lastVal) / slope;
-    if (quartersToFail > 0 && quartersToFail <= 4) {
-      projectedFailureQuarter = `~${Math.ceil(quartersToFail)} quarter${Math.ceil(quartersToFail) > 1 ? "s" : ""}`;
-    } else if (lastVal > threshold) {
-      projectedFailureQuarter = "Already exceeded";
-    }
-  } else if (thresholdDirection === "min" && slope < 0) {
-    const quartersToFail = (threshold - lastVal) / slope;
-    if (quartersToFail > 0 && quartersToFail <= 4) {
-      projectedFailureQuarter = `~${Math.ceil(quartersToFail)} quarter${Math.ceil(quartersToFail) > 1 ? "s" : ""}`;
-    } else if (lastVal < threshold) {
-      projectedFailureQuarter = "Already exceeded";
-    }
-  }
-  return { chartData, projectedFailureQuarter };
-}
-
 function DriftDetail({ onBack }: { onBack: () => void }) {
   const safeAirAudits = FIELD_AUDIT_RESULTS.filter(
     (a) => a.manufacturer === "SafeAir Technologies"
@@ -356,7 +320,7 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
           <span className="badge badge-fail">CRITICAL</span>
         </div>
 
-        {/* Trend charts with predictive trajectory */}
+        {/* Trend charts */}
         <div
           style={{
             display: "grid",
@@ -365,18 +329,13 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
             marginTop: "1.5rem",
           }}
         >
-          {AUDIT_TRENDS.map((trend) => {
-            const { chartData, projectedFailureQuarter } = computePredictiveData(trend.dataPoints, trend.threshold, trend.thresholdDirection);
-            const isExceeded = trend.thresholdDirection === "max"
-              ? trend.dataPoints[trend.dataPoints.length - 1].value > trend.threshold
-              : trend.dataPoints[trend.dataPoints.length - 1].value < trend.threshold;
-            return (
+          {AUDIT_TRENDS.map((trend) => (
             <div key={trend.testType} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
               <h4 style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>
                 {trend.testType}
               </h4>
               <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={chartData}>
+                <LineChart data={trend.dataPoints}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="quarter" tick={{ fontSize: 10 }} />
                   <YAxis
@@ -385,13 +344,13 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
                       trend.thresholdDirection === "min"
                         ? [
                             (dataMin: number) =>
-                              Math.min(dataMin, trend.threshold) - 2,
+                              Math.min(dataMin, trend.threshold) - 1,
                             "auto",
                           ]
                         : [
                             "auto",
                             (dataMax: number) =>
-                              Math.max(dataMax, trend.threshold) + 4,
+                              Math.max(dataMax, trend.threshold) + 2,
                           ]
                     }
                   />
@@ -410,19 +369,15 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke={isExceeded ? "var(--danger)" : "var(--primary)"}
+                    stroke={
+                      trend.dataPoints[trend.dataPoints.length - 1].value >
+                        trend.threshold ===
+                      (trend.thresholdDirection === "max")
+                        ? "var(--danger)"
+                        : "var(--primary)"
+                    }
                     strokeWidth={2}
                     dot={{ r: 4 }}
-                    connectNulls={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="projected"
-                    stroke="var(--warning)"
-                    strokeWidth={2}
-                    strokeDasharray="6 3"
-                    dot={{ r: 3, strokeDasharray: "" }}
-                    connectNulls={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -437,18 +392,8 @@ function DriftDetail({ onBack }: { onBack: () => void }) {
                 {trend.threshold}
                 {trend.unit}
               </div>
-              {projectedFailureQuarter && (
-                <div style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--danger)", marginTop: "0.25rem", fontWeight: 600 }}>
-                  Projected failure: {projectedFailureQuarter}
-                </div>
-              )}
             </div>
-          );
-          })}
-        </div>
-
-        <div className="info-box" style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
-          <strong>Predictive Trajectory:</strong> Dashed orange lines show projected values based on linear extrapolation of audit trends. These projections estimate when metrics will cross regulatory thresholds at the current rate of drift.
+          ))}
         </div>
       </div>
 
@@ -890,47 +835,43 @@ function SarDriftDetail({ onBack }: { onBack: () => void }) {
           <strong>Grade D Breathing Air Requirements (CGA G-7.1):</strong> CO &le; 10 ppm, CO₂ &le; 1,000 ppm, O₂ 19.5–23.5%, Oil Mist &le; 5 mg/m³. Minimum airflow: 115 L/min (tight-fitting).
         </div>
 
-        {/* Trend charts with predictive trajectory */}
+        {/* Trend charts */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginTop: "1.5rem" }}>
-          {SAR_AUDIT_TRENDS.map((trend) => {
-            const { chartData, projectedFailureQuarter } = computePredictiveData(trend.dataPoints, trend.threshold, trend.thresholdDirection);
-            const isExceeded = trend.thresholdDirection === "max"
-              ? trend.dataPoints[trend.dataPoints.length - 1].value > trend.threshold
-              : trend.dataPoints[trend.dataPoints.length - 1].value < trend.threshold;
-            return (
-              <div key={trend.testType} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
-                <h4 style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{trend.testType}</h4>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="quarter" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} domain={
-                      trend.thresholdDirection === "min"
-                        ? [(dataMin: number) => Math.min(dataMin, trend.threshold) - 5, "auto"]
-                        : ["auto", (dataMax: number) => Math.max(dataMax, trend.threshold) + 2]
-                    } />
-                    <Tooltip />
-                    <ReferenceLine y={trend.threshold} stroke="var(--danger)" strokeDasharray="5 5"
-                      label={{ value: `${trend.thresholdDirection === "min" ? "Min" : "Max"}: ${trend.threshold}${trend.unit}`, position: "right", fontSize: 10, fill: "var(--danger)" }} />
-                    <Line type="monotone" dataKey="value" stroke={isExceeded ? "var(--danger)" : "var(--primary)"} strokeWidth={2} dot={{ r: 4 }} connectNulls={false} />
-                    <Line type="monotone" dataKey="projected" stroke="var(--warning)" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3, strokeDasharray: "" }} connectNulls={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  Threshold: {trend.thresholdDirection === "min" ? ">=" : "<="} {trend.threshold}{trend.unit}
-                </div>
-                {projectedFailureQuarter && (
-                  <div style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--danger)", marginTop: "0.25rem", fontWeight: 600 }}>
-                    Projected failure: {projectedFailureQuarter}
-                  </div>
-                )}
+          {SAR_AUDIT_TRENDS.map((trend) => (
+            <div key={trend.testType} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}>
+              <h4 style={{ fontSize: "0.9rem", marginBottom: "0.5rem" }}>{trend.testType}</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={trend.dataPoints}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="quarter" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} domain={
+                    trend.thresholdDirection === "min"
+                      ? [(dataMin: number) => Math.min(dataMin, trend.threshold) - 5, "auto"]
+                      : ["auto", (dataMax: number) => Math.max(dataMax, trend.threshold) + 2]
+                  } />
+                  <Tooltip />
+                  <ReferenceLine y={trend.threshold} stroke="var(--danger)" strokeDasharray="5 5"
+                    label={{ value: `${trend.thresholdDirection === "min" ? "Min" : "Max"}: ${trend.threshold}${trend.unit}`, position: "right", fontSize: 10, fill: "var(--danger)" }} />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={
+                      trend.dataPoints[trend.dataPoints.length - 1].value >
+                        trend.threshold ===
+                      (trend.thresholdDirection === "max")
+                        ? "var(--danger)"
+                        : "var(--primary)"
+                    }
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                Threshold: {trend.thresholdDirection === "min" ? ">=" : "<="} {trend.threshold}{trend.unit}
               </div>
-            );
-          })}
-        </div>
-
-        <div className="info-box" style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
-          <strong>Predictive Trajectory:</strong> Dashed orange lines show projected values. CO is trending toward the 10 ppm Grade D limit. CO₂ is approaching the 1,000 ppm limit. Airflow rate is declining toward the 115 L/min minimum.
+            </div>
+          ))}
         </div>
       </div>
 
